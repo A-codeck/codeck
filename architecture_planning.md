@@ -1,9 +1,13 @@
 #Architecture planning
 
 ## Models
+
 UserModel
+
 GroupModel
+
 ActivityModel
+
 CommentModel
 
 ## Controllers
