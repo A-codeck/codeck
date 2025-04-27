@@ -18,16 +18,16 @@ erDiagram
     USERS {
       integer id PK
       varchar email
-      varchar nome
-      varchar infos_de_login
+      varchar name
+      placeholder login_info
     }
     ACTIVITIES {
       integer id PK
       integer user_id
-      varchar titulo
-      varchar desc
-      date data
-      varchar imagem
+      varchar title
+      varchar description
+      date date
+      varchar image
     }
     COMMENTS {
       integer id PK
@@ -38,13 +38,15 @@ erDiagram
     }
     GROUPS {
       integer id PK
-      varchar nome
-      varchar desc
-      date data_inicio
-      date data_fim
+      integer owner_id FK
+      varchar name
+      varchar descripton
+      string group_image
+      date start_date
+      date end_date
     }
     USER_GROUPS {
-      varchar apelido
+      varchar nickname
       integer group_id PK
       integer user_id PK
     }
@@ -56,6 +58,7 @@ erDiagram
     %% Relationships (Foreign Keys)
     USERS ||--o{ ACTIVITIES : user_id
     USERS ||--o{ USER_GROUPS : user_id
+    USERS ||--o{ GROUPS : owner_id
 
     ACTIVITIES ||--o{ COMMENTS : activity_id
     ACTIVITIES ||--o{ GROUP_ACTIVITIES : acitivity_id
@@ -109,9 +112,7 @@ classDiagram
     %% Controllers
     class UserController {
       +getUserInfo()
-      +accessProfile()
-      +listActivities()
-      +manageGroupRoles()
+      +getActivities()
     }
     class LoginController {
       +createAccount()
@@ -120,16 +121,16 @@ classDiagram
     class GroupController {
       +createGroup()
       +readGroup()
-      +editGroup()
+      +updateGroup()
       +deleteGroup()
       +addUserToGroup()
-      +listGroupActivities()
+      +getGroupActivities()
     }
     class ActivityController {
       +createActivity()
       +readActivity()
       +updateActivity()
-      +listActivityComments()
+      +getActivityComments()
     }
     class CommentController {
       +createComment()
