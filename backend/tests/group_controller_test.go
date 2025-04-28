@@ -18,7 +18,8 @@ var router *mux.Router
 var testGroupModel *group.InMemoryGroupModel
 
 func TestMain(m *testing.M) {
-	groupController := controllers.NewGroupController(group.NewInMemoryGroup())
+	testGroupModel = group.NewInMemoryGroup()
+	groupController := controllers.NewGroupController(testGroupModel)
 	router = mux.NewRouter()
 	routes.RegisterRoutes(router, groupController)
 
