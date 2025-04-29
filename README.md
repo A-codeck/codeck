@@ -163,20 +163,16 @@ classDiagram
       +displayProgressBar()
       +displayGroupRanking()
     }
-    class ActivityCreationView {
-      +displayActivityForm()
-    }
-    class ActivityDetailView {
-      +displayActivityDetails()
-    }
 
     %% Views interact with controllers
     Homepage --> LoginController
     LoginView --> LoginController
     HomeView --> ActivityController
     HomeView --> GroupController
+    HomeView --> CommentController
+    HomeView --> UserController
     GroupView --> GroupController
-    ActivityCreationView --> ActivityController
-    ActivityDetailView --> ActivityController
+    GroupView --> ActivityController
+    GroupView --> CommentController
 
 ```
