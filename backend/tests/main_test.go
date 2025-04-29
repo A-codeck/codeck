@@ -13,8 +13,11 @@ import (
 )
 
 var (
-	testGroupRouter    *mux.Router
-	testGroupModel     *group.InMemoryGroupModel
+	// Group
+	testGroupRouter *mux.Router
+	testGroupModel  *group.InMemoryGroupModel
+
+	// Activity
 	testActivityRouter *mux.Router
 	testActivityModel  *activity.InMemoryActivityModel
 )

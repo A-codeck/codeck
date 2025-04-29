@@ -10,13 +10,13 @@ import (
 	"backend/models/group"
 )
 
-func setup() {
+func setupGroupTest() {
 	testGroupModel.Clear()
 	testGroupModel.SeedDefaultData()
 }
 
 func TestCreateGroupValid(t *testing.T) {
-	setup()
+	setupGroupTest()
 	validGroup := map[string]interface{}{
 		"name":        "New Group",
 		"end_date":    "2025-12-31",
@@ -40,7 +40,7 @@ func TestCreateGroupValid(t *testing.T) {
 }
 
 func TestCreateGroupInvalid(t *testing.T) {
-	setup()
+	setupGroupTest()
 	invalidGroup := map[string]interface{}{
 		"end_date": "2025-12-31",
 	}
@@ -60,7 +60,7 @@ func TestCreateGroupInvalid(t *testing.T) {
 }
 
 func TestReadGroup(t *testing.T) {
-	setup()
+	setupGroupTest()
 	req, err := http.NewRequest("GET", "/groups/1", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +84,7 @@ func TestReadGroup(t *testing.T) {
 }
 
 func TestUpdateGroupValid(t *testing.T) {
-	setup()
+	setupGroupTest()
 	validUpdate := map[string]interface{}{
 		"description": "Updated description",
 		"group_image": "new_image_url",
@@ -107,7 +107,7 @@ func TestUpdateGroupValid(t *testing.T) {
 }
 
 func TestUpdateGroupInvalid(t *testing.T) {
-	setup()
+	setupGroupTest()
 	invalidUpdate := map[string]interface{}{
 		"name": "Invalid Update",
 	}
@@ -128,7 +128,7 @@ func TestUpdateGroupInvalid(t *testing.T) {
 }
 
 func TestDeleteGroupInvalid(t *testing.T) {
-	setup()
+	setupGroupTest()
 	invalidRequest := map[string]interface{}{
 		"creator_id": "2",
 	}
@@ -149,7 +149,7 @@ func TestDeleteGroupInvalid(t *testing.T) {
 }
 
 func TestDeleteGroupValid(t *testing.T) {
-	setup()
+	setupGroupTest()
 	validRequest := map[string]interface{}{
 		"creator_id": "1",
 	}

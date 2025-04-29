@@ -40,7 +40,7 @@ func TestCreateActivityValid(t *testing.T) {
 }
 
 func TestCreateActivityInvalid(t *testing.T) {
-	setup()
+	setupActivityTest()
 	invalidActivity := map[string]interface{}{
 		"Dpzinha legal": "Title",
 	}
@@ -60,7 +60,7 @@ func TestCreateActivityInvalid(t *testing.T) {
 }
 
 func TestReadActivity(t *testing.T) {
-	setup()
+	setupActivityTest()
 	req, err := http.NewRequest("GET", "/activities/1", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +84,7 @@ func TestReadActivity(t *testing.T) {
 }
 
 func TestUpdateActivityValid(t *testing.T) {
-	setup()
+	setupActivityTest()
 	validUpdate := map[string]interface{}{
 		"description":    "Updated description",
 		"activity_image": "https://wallsdesk.com/wp-content/uploads/2017/01/Octopus-Wallpapers-HD.jpg",
@@ -107,7 +107,7 @@ func TestUpdateActivityValid(t *testing.T) {
 }
 
 func TestUpdateActivityInvalid(t *testing.T) {
-	setup()
+	setupActivityTest()
 	invalidUpdate := map[string]interface{}{
 		"name": "Invalid Update",
 	}
@@ -128,7 +128,7 @@ func TestUpdateActivityInvalid(t *testing.T) {
 }
 
 func TestDeleteActivityInvalid(t *testing.T) {
-	setup()
+	setupActivityTest()
 	invalidRequest := map[string]interface{}{
 		"creator_id": "2",
 	}
@@ -149,7 +149,7 @@ func TestDeleteActivityInvalid(t *testing.T) {
 }
 
 func TestDeleteActivityValid(t *testing.T) {
-	setup()
+	setupActivityTest()
 	validRequest := map[string]interface{}{
 		"creator_id": "1",
 	}
