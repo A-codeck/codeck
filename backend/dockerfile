@@ -1,0 +1,36 @@
+FROM golang:1.24-alpine AS build
+
+# Install git (for go modules) and ca-certificates
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /app
+
+# Cache dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source
+COPY . .
+
+# Build your binary
+RUN go build -o server main.go
+
+# --------------------------------------------------
+
+# Final runtime image
+FROM alpine:latest
+
+# Install TLS certs
+RUN apk add --no-cache ca-certificates
+
+WORKDIR /app
+
+# Copy binary from build stage
+COPY --from=build /app/server .
+
+# Expose port
+EXPOSE 8080
+
+# Run!
+ENTRYPOINT ["./server"]
+
