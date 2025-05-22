@@ -1,23 +1,17 @@
 services:
   api:
-    image: golang:1.20-alpine
-    command: >
-      sh -c "apk add --no-cache git &&
-             cd /app &&
-             go mod download &&
-             go run main.go"
+    build:
+      context: .
+      dockerfile: Dockerfile
     working_dir: /app
-    volumes:
-      - .:/app
     ports:
       - "8080:8080"
     environment:
-      # these must match the DB settings below
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USER=example_user
-      - DB_PASSWORD=example_pass
-      - DB_NAME=example_db
+      - DB_USER=my_user
+      - DB_PASSWORD=my_pwd
+      - DB_NAME=codeck
     depends_on:
       - db
 
@@ -25,11 +19,13 @@ services:
     image: postgres:16
     restart: always
     environment:
-      POSTGRES_USER: example_user
-      POSTGRES_PASSWORD: example_pass
-      POSTGRES_DB: example_db
+      POSTGRES_USER: my_user
+      POSTGRES_PASSWORD: my_pwd
+      POSTGRES_DB: codeck
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
 volumes:
   postgres_data:
