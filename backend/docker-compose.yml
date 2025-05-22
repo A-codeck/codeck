@@ -1,0 +1,36 @@
+services:
+  api:
+    image: golang:1.20-alpine
+    command: >
+      sh -c "apk add --no-cache git &&
+             cd /app &&
+             go mod download &&
+             go run main.go"
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    environment:
+      # these must match the DB settings below
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=example_user
+      - DB_PASSWORD=example_pass
+      - DB_NAME=example_db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: example_user
+      POSTGRES_PASSWORD: example_pass
+      POSTGRES_DB: example_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
