@@ -19,3 +19,12 @@ func RegisterActivityRoutes(r *mux.Router, activityController *controllers.Activ
 	r.HandleFunc("/activities/{id}", activityController.UpdateActivity).Methods("PUT")
 	r.HandleFunc("/activities/{id}", activityController.DeleteActivity).Methods("DELETE")
 }
+
+func RegisterUserRoutes(r *mux.Router, userController *controllers.UserController) {
+	r.HandleFunc("/users/{id}", userController.GetUser).Methods("GET")
+	r.HandleFunc("/users", userController.CreateUser).Methods("POST")
+}
+
+func RegisterLoginRoutes(r *mux.Router, loginController *controllers.LoginController) {
+	r.HandleFunc("/login", loginController.Login).Methods("POST")
+}
