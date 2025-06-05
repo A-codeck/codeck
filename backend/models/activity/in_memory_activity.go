@@ -28,6 +28,18 @@ func (g *inMemoryActivity) GetActivityByID(id string) (Activity, bool) {
 	return activity, exists
 }
 
+func (g *inMemoryActivity) GetActivitiesByCreatorID(creatorID string) []Activity {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	var activities []Activity
+	for _, activity := range g.activitys {
+		if activity.CreatorID == creatorID {
+			activities = append(activities, activity)
+		}
+	}
+	return activities
+}
+
 func (g *inMemoryActivity) CreateActivity(activity Activity) Activity {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
