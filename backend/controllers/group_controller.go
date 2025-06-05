@@ -109,3 +109,267 @@ func (gc *GroupController) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (gc *GroupController) AddUserToGroup(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID := vars["id"]
+
+	_, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	var request struct {
+		UserID   string  `json:"user_id"`
+		Nickname *string `json:"nickname,omitempty"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.UserID == "" {
+		http.Error(w, "Missing user_id", http.StatusBadRequest)
+		return
+	}
+
+	if gc.Model.IsUserInGroup(groupID, request.UserID) {
+		http.Error(w, "User is already a member of this group", http.StatusConflict)
+		return
+	}
+
+	success := gc.Model.AddUserToGroup(groupID, request.UserID, request.Nickname)
+	if !success {
+		http.Error(w, "Failed to add user to group", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":  "User added to group successfully",
+		"group_id": groupID,
+		"user_id":  request.UserID,
+	})
+}
+
+func (gc *GroupController) RemoveUserFromGroup(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID := vars["id"]
+
+	group, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	var request struct {
+		UserID      string `json:"user_id"`
+		RequesterID string `json:"requester_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.UserID == "" || request.RequesterID == "" {
+		http.Error(w, "Missing user_id or requester_id", http.StatusBadRequest)
+		return
+	}
+
+	if request.RequesterID != group.CreatorID && request.RequesterID != request.UserID {
+		http.Error(w, "Forbidden: Only group creator or the user themselves can remove membership", http.StatusForbidden)
+		return
+	}
+
+	if !gc.Model.IsUserInGroup(groupID, request.UserID) {
+		http.Error(w, "User is not a member of this group", http.StatusNotFound)
+		return
+	}
+
+	success := gc.Model.RemoveUserFromGroup(groupID, request.UserID)
+	if !success {
+		http.Error(w, "Failed to remove user from group", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":  "User removed from group successfully",
+		"group_id": groupID,
+		"user_id":  request.UserID,
+	})
+}
+
+func (gc *GroupController) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID := vars["id"]
+
+	members, exists := gc.Model.GetGroupMembers(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"group_id":     groupID,
+		"members":      members,
+		"member_count": len(members),
+	})
+}
+
+func (gc *GroupController) CreateInviteLink(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID := vars["id"]
+
+	group, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	var request struct {
+		CreatorID string  `json:"creator_id"`
+		ExpiresAt *string `json:"expires_at,omitempty"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.CreatorID == "" {
+		http.Error(w, "Missing creator_id", http.StatusBadRequest)
+		return
+	}
+
+	if request.CreatorID != group.CreatorID {
+		http.Error(w, "Forbidden: Only group creator can create invite links", http.StatusForbidden)
+		return
+	}
+
+	invite, success := gc.Model.CreateInviteLink(groupID, request.CreatorID, request.ExpiresAt)
+	if !success {
+		http.Error(w, "Failed to create invite link", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(invite)
+}
+
+func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	inviteCode := vars["invite_code"]
+
+	var request struct {
+		UserID   string  `json:"user_id"`
+		Nickname *string `json:"nickname,omitempty"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.UserID == "" {
+		http.Error(w, "Missing user_id", http.StatusBadRequest)
+		return
+	}
+
+	invite, exists := gc.Model.GetInviteByCode(inviteCode)
+	if !exists || !invite.IsActive {
+		http.Error(w, "Invalid or expired invite code", http.StatusNotFound)
+		return
+	}
+
+	if gc.Model.IsUserInGroup(invite.GroupID, request.UserID) {
+		http.Error(w, "User is already a member of this group", http.StatusConflict)
+		return
+	}
+
+	success := gc.Model.AddUserToGroup(invite.GroupID, request.UserID, request.Nickname)
+	if !success {
+		http.Error(w, "Failed to join group", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":     "Successfully joined group",
+		"group_id":    invite.GroupID,
+		"user_id":     request.UserID,
+		"invite_code": inviteCode,
+	})
+}
+
+func (gc *GroupController) GetGroupInvites(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID := vars["id"]
+
+	_, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	invites := gc.Model.GetActiveInvites(groupID)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"group_id":     groupID,
+		"invites":      invites,
+		"invite_count": len(invites),
+	})
+}
+
+func (gc *GroupController) DeactivateInvite(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	inviteCode := vars["invite_code"]
+
+	var request struct {
+		RequesterID string `json:"requester_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.RequesterID == "" {
+		http.Error(w, "Missing requester_id", http.StatusBadRequest)
+		return
+	}
+
+	invite, exists := gc.Model.GetInviteByCode(inviteCode)
+	if !exists {
+		http.Error(w, "Invite not found", http.StatusNotFound)
+		return
+	}
+
+	group, exists := gc.Model.GetGroupByID(invite.GroupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	if request.RequesterID != group.CreatorID && request.RequesterID != invite.CreatedBy {
+		http.Error(w, "Forbidden: Only group creator or invite creator can deactivate invite", http.StatusForbidden)
+		return
+	}
+
+	success := gc.Model.DeactivateInvite(inviteCode)
+	if !success {
+		http.Error(w, "Failed to deactivate invite", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":     "Invite deactivated successfully",
+		"invite_code": inviteCode,
+	})
+}
