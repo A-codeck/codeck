@@ -101,7 +101,7 @@ func (g *inMemoryGroup) SeedDefaultData() {
 	})
 }
 
-func (g *inMemoryGroup) AddUserToGroup(groupID, userID string, nickname *string) bool {
+func (g *inMemoryGroup) AddUserToGroup(groupID, userID string) bool {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 
@@ -120,7 +120,7 @@ func (g *inMemoryGroup) AddUserToGroup(groupID, userID string, nickname *string)
 	newMember := GroupMember{
 		UserID:   userID,
 		GroupID:  groupID,
-		Nickname: nickname,
+		Nickname: nil,
 	}
 
 	g.groupMembers[groupID] = append(g.groupMembers[groupID], newMember)
@@ -173,6 +173,46 @@ func (g *inMemoryGroup) IsUserInGroup(groupID, userID string) bool {
 
 	for _, member := range members {
 		if member.UserID == userID {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (g *inMemoryGroup) SetUserNickname(groupID, userID string, nickname *string) bool {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+
+	members, exists := g.groupMembers[groupID]
+	if !exists {
+		return false
+	}
+
+	for i, member := range members {
+		if member.UserID == userID {
+			members[i].Nickname = nickname
+			g.groupMembers[groupID] = members
+			return true
+		}
+	}
+
+	return false
+}
+
+func (g *inMemoryGroup) DeleteUserNickname(groupID, userID string) bool {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+
+	members, exists := g.groupMembers[groupID]
+	if !exists {
+		return false
+	}
+
+	for i, member := range members {
+		if member.UserID == userID {
+			members[i].Nickname = nil
+			g.groupMembers[groupID] = members
 			return true
 		}
 	}

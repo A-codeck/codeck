@@ -121,8 +121,7 @@ func (gc *GroupController) AddUserToGroup(w http.ResponseWriter, r *http.Request
 	}
 
 	var request struct {
-		UserID   string  `json:"user_id"`
-		Nickname *string `json:"nickname,omitempty"`
+		UserID string `json:"user_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -140,7 +139,7 @@ func (gc *GroupController) AddUserToGroup(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	success := gc.Model.AddUserToGroup(groupID, request.UserID, request.Nickname)
+	success := gc.Model.AddUserToGroup(groupID, request.UserID)
 	if !success {
 		http.Error(w, "Failed to add user to group", http.StatusInternalServerError)
 		return
@@ -266,8 +265,7 @@ func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Requ
 	inviteCode := vars["invite_code"]
 
 	var request struct {
-		UserID   string  `json:"user_id"`
-		Nickname *string `json:"nickname,omitempty"`
+		UserID string `json:"user_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -291,7 +289,7 @@ func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	success := gc.Model.AddUserToGroup(invite.GroupID, request.UserID, request.Nickname)
+	success := gc.Model.AddUserToGroup(invite.GroupID, request.UserID)
 	if !success {
 		http.Error(w, "Failed to join group", http.StatusInternalServerError)
 		return
@@ -371,5 +369,119 @@ func (gc *GroupController) DeactivateInvite(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(map[string]string{
 		"message":     "Invite deactivated successfully",
 		"invite_code": inviteCode,
+	})
+}
+
+func (gc *GroupController) SetUserNickname(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID := vars["id"]
+
+	group, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	var request struct {
+		UserID      string  `json:"user_id"`
+		RequesterID string  `json:"requester_id"`
+		Nickname    *string `json:"nickname"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.UserID == "" || request.RequesterID == "" {
+		http.Error(w, "Missing user_id or requester_id", http.StatusBadRequest)
+		return
+	}
+
+	if request.RequesterID != request.UserID && request.RequesterID != group.CreatorID {
+		http.Error(w, "Forbidden: Only the user themselves or group creator can set nickname", http.StatusForbidden)
+		return
+	}
+
+	if !gc.Model.IsUserInGroup(groupID, request.UserID) {
+		http.Error(w, "User is not a member of this group", http.StatusNotFound)
+		return
+	}
+
+	if request.Nickname != nil && len(*request.Nickname) == 0 {
+		request.Nickname = nil
+	}
+	if request.Nickname != nil && len(*request.Nickname) > 50 {
+		http.Error(w, "Nickname cannot be longer than 50 characters", http.StatusBadRequest)
+		return
+	}
+
+	success := gc.Model.SetUserNickname(groupID, request.UserID, request.Nickname)
+	if !success {
+		http.Error(w, "Failed to set nickname", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response := map[string]interface{}{
+		"message":  "Nickname updated successfully",
+		"group_id": groupID,
+		"user_id":  request.UserID,
+	}
+	if request.Nickname != nil {
+		response["nickname"] = *request.Nickname
+	} else {
+		response["nickname"] = nil
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func (gc *GroupController) DeleteUserNickname(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID := vars["id"]
+
+	group, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	var request struct {
+		UserID      string `json:"user_id"`
+		RequesterID string `json:"requester_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.UserID == "" || request.RequesterID == "" {
+		http.Error(w, "Missing user_id or requester_id", http.StatusBadRequest)
+		return
+	}
+
+	if request.RequesterID != request.UserID && request.RequesterID != group.CreatorID {
+		http.Error(w, "Forbidden: Only the user themselves or group creator can delete nickname", http.StatusForbidden)
+		return
+	}
+
+	if !gc.Model.IsUserInGroup(groupID, request.UserID) {
+		http.Error(w, "User is not a member of this group", http.StatusNotFound)
+		return
+	}
+
+	success := gc.Model.DeleteUserNickname(groupID, request.UserID)
+	if !success {
+		http.Error(w, "Failed to delete nickname", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":  "Nickname deleted successfully",
+		"group_id": groupID,
+		"user_id":  request.UserID,
+		"nickname": nil,
 	})
 }
