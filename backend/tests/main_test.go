@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 	routes.RegisterActivityRoutes(testActivityRouter, activityController)
 
 	testUserModel = user.NewInMemoryUser()
-	userController := controllers.NewUserController(testUserModel)
+	userController := controllers.NewUserController(testUserModel, testActivityModel)
 	testUserRouter = mux.NewRouter()
 	routes.RegisterUserRoutes(testUserRouter, userController)
 

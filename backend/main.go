@@ -20,7 +20,7 @@ func main() {
 
 	groupController := controllers.NewGroupController(group.DefaultGroupModel)
 	activityController := controllers.NewActivityController(activity.DefaultActivityModel)
-	userController := controllers.NewUserController(user.DefaultUserModel)
+	userController := controllers.NewUserController(user.DefaultUserModel, activity.DefaultActivityModel)
 	loginController := controllers.NewLoginController(user.DefaultUserModel)
 
 	routes.RegisterGroupRoutes(r, groupController)

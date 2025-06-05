@@ -7,17 +7,19 @@ import (
 	"log"
 	"net/http"
 
+	"backend/models/activity"
 	"backend/models/user"
 
 	"github.com/gorilla/mux"
 )
 
 type UserController struct {
-	Model user.UserModel
+	Model         user.UserModel
+	ActivityModel activity.ActivityModel
 }
 
-func NewUserController(model user.UserModel) *UserController {
-	return &UserController{Model: model}
+func NewUserController(model user.UserModel, activityModel activity.ActivityModel) *UserController {
+	return &UserController{Model: model, ActivityModel: activityModel}
 }
 
 func (uc *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
@@ -69,4 +71,22 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(createdUser)
+}
+
+func (uc *UserController) GetUserActivities(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := vars["id"]
+
+	// Check if user exists
+	_, exists := uc.Model.GetUserByID(userID)
+	if !exists {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Get all activities for this user
+	activities := uc.ActivityModel.GetActivitiesByCreatorID(userID)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(activities)
 }
