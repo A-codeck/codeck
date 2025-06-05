@@ -158,11 +158,13 @@ func (gc *GroupController) AddUserToGroup(w http.ResponseWriter, r *http.Request
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
+	response := map[string]interface{}{
 		"message":  "User added to group successfully",
 		"group_id": groupID,
 		"user_id":  request.UserID,
-	})
+	}
+
+	json.NewEncoder(w).Encode(response)
 }
 
 func (gc *GroupController) RemoveUserFromGroup(w http.ResponseWriter, r *http.Request) {
@@ -325,12 +327,14 @@ func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
+	response := map[string]interface{}{
 		"message":     "Successfully joined group",
 		"group_id":    invite.GroupID,
 		"user_id":     request.UserID,
 		"invite_code": inviteCode,
-	})
+	}
+	
+	json.NewEncoder(w).Encode(response)
 }
 
 func (gc *GroupController) GetGroupInvites(w http.ResponseWriter, r *http.Request) {
