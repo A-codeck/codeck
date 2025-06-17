@@ -21,9 +21,21 @@ func NewGroupController(model group.GroupModel) *GroupController {
 func (gc *GroupController) GetGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
+	
+	requesterID := r.URL.Query().Get("requester_id")
+	if requesterID == "" {
+		http.Error(w, "Missing requester_id", http.StatusBadRequest)
+		return
+	}
+	
 	group, exists := gc.Model.GetGroupByID(groupID)
 	if !exists {
 		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	if !gc.Model.IsUserInGroup(groupID, requesterID) {
+		http.Error(w, "Forbidden: Only group members can view group details", http.StatusForbidden)
 		return
 	}
 
@@ -205,6 +217,23 @@ func (gc *GroupController) RemoveUserFromGroup(w http.ResponseWriter, r *http.Re
 func (gc *GroupController) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
+	
+	requesterID := r.URL.Query().Get("requester_id")
+	if requesterID == "" {
+		http.Error(w, "Missing requester_id", http.StatusBadRequest)
+		return
+	}
+
+	_, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	if !gc.Model.IsUserInGroup(groupID, requesterID) {
+		http.Error(w, "Forbidden: Only group members can view group members", http.StatusForbidden)
+		return
+	}
 
 	members, exists := gc.Model.GetGroupMembers(groupID)
 	if !exists {
@@ -483,5 +512,40 @@ func (gc *GroupController) DeleteUserNickname(w http.ResponseWriter, r *http.Req
 		"group_id": groupID,
 		"user_id":  request.UserID,
 		"nickname": nil,
+	})
+}
+
+func (gc *GroupController) GetGroupActivities(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID := vars["id"]
+	
+	requesterID := r.URL.Query().Get("requester_id")
+	if requesterID == "" {
+		http.Error(w, "Missing requester_id", http.StatusBadRequest)
+		return
+	}
+
+	_, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	if !gc.Model.IsUserInGroup(groupID, requesterID) {
+		http.Error(w, "Forbidden: Only group members can view group activities", http.StatusForbidden)
+		return
+	}
+
+	activities, exists := gc.Model.GetGroupActivities(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"group_id":        groupID,
+		"activities":      activities,
+		"activity_count":  len(activities),
 	})
 }

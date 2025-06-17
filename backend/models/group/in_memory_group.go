@@ -7,21 +7,23 @@ import (
 )
 
 type inMemoryGroup struct {
-	groups       map[string]Group
-	groupMembers map[string][]GroupMember // groupID -> []GroupMember
-	invites      map[string]GroupInvite   // inviteCode -> GroupInvite
-	idCounter    int
-	mutex        sync.Mutex
+	groups          map[string]Group
+	groupMembers    map[string][]GroupMember // groupID -> []GroupMember
+	invites         map[string]GroupInvite   // inviteCode -> GroupInvite
+	groupActivities map[string][]string      // groupID -> []activityID
+	idCounter       int
+	mutex           sync.Mutex
 }
 
 type InMemoryGroupModel = inMemoryGroup
 
 func NewInMemoryGroup() *inMemoryGroup {
 	return &inMemoryGroup{
-		groups:       make(map[string]Group),
-		groupMembers: make(map[string][]GroupMember),
-		invites:      make(map[string]GroupInvite),
-		idCounter:    1,
+		groups:          make(map[string]Group),
+		groupMembers:    make(map[string][]GroupMember),
+		invites:         make(map[string]GroupInvite),
+		groupActivities: make(map[string][]string),
+		idCounter:       1,
 	}
 }
 
@@ -38,14 +40,14 @@ func (g *inMemoryGroup) CreateGroup(group Group) Group {
 	group.ID = strconv.Itoa(g.idCounter)
 	g.idCounter++
 	g.groups[group.ID] = group
-	
+
 	creatorMember := GroupMember{
 		UserID:   group.CreatorID,
 		GroupID:  group.ID,
 		Nickname: nil,
 	}
 	g.groupMembers[group.ID] = append(g.groupMembers[group.ID], creatorMember)
-	
+
 	return group
 }
 
@@ -87,6 +89,7 @@ func (g *inMemoryGroup) Clear() {
 	g.groups = make(map[string]Group)
 	g.groupMembers = make(map[string][]GroupMember)
 	g.invites = make(map[string]GroupInvite)
+	g.groupActivities = make(map[string][]string)
 	g.idCounter = 1
 }
 
@@ -143,7 +146,7 @@ func (g *inMemoryGroup) RemoveUserFromGroup(groupID, userID string) bool {
 		}
 	}
 
-	return false 
+	return false
 }
 
 func (g *inMemoryGroup) GetGroupMembers(groupID string) ([]GroupMember, bool) {
@@ -223,13 +226,13 @@ func (g *inMemoryGroup) DeleteUserNickname(groupID, userID string) bool {
 func (g *inMemoryGroup) CreateInviteLink(groupID, createdBy string, expiresAt *string) (GroupInvite, bool) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	
+
 	if _, exists := g.groups[groupID]; !exists {
 		return GroupInvite{}, false
 	}
-	
+
 	inviteCode := g.generateInviteCode()
-	
+
 	invite := GroupInvite{
 		InviteCode: inviteCode,
 		GroupID:    groupID,
@@ -238,7 +241,7 @@ func (g *inMemoryGroup) CreateInviteLink(groupID, createdBy string, expiresAt *s
 		ExpiresAt:  expiresAt,
 		IsActive:   true,
 	}
-	
+
 	g.invites[inviteCode] = invite
 	return invite, true
 }
@@ -246,12 +249,12 @@ func (g *inMemoryGroup) CreateInviteLink(groupID, createdBy string, expiresAt *s
 func (g *inMemoryGroup) GetInviteByCode(inviteCode string) (GroupInvite, bool) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	
+
 	invite, exists := g.invites[inviteCode]
 	if !exists {
 		return GroupInvite{}, false
 	}
-	
+
 	if invite.ExpiresAt != nil {
 		expiryTime, err := time.Parse("2006-01-02T15:04:05Z", *invite.ExpiresAt)
 		if err == nil && time.Now().After(expiryTime) {
@@ -260,19 +263,19 @@ func (g *inMemoryGroup) GetInviteByCode(inviteCode string) (GroupInvite, bool) {
 			return invite, false
 		}
 	}
-	
+
 	return invite, invite.IsActive
 }
 
 func (g *inMemoryGroup) DeactivateInvite(inviteCode string) bool {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	
+
 	invite, exists := g.invites[inviteCode]
 	if !exists {
 		return false
 	}
-	
+
 	invite.IsActive = false
 	g.invites[inviteCode] = invite
 	return true
@@ -281,9 +284,9 @@ func (g *inMemoryGroup) DeactivateInvite(inviteCode string) bool {
 func (g *inMemoryGroup) GetActiveInvites(groupID string) []GroupInvite {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	
+
 	var activeInvites []GroupInvite
-	
+
 	for _, invite := range g.invites {
 		if invite.GroupID == groupID && invite.IsActive {
 			if invite.ExpiresAt != nil {
@@ -297,8 +300,24 @@ func (g *inMemoryGroup) GetActiveInvites(groupID string) []GroupInvite {
 			activeInvites = append(activeInvites, invite)
 		}
 	}
-	
+
 	return activeInvites
+}
+
+func (g *inMemoryGroup) GetGroupActivities(groupID string) ([]string, bool) {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+
+	if _, exists := g.groups[groupID]; !exists {
+		return nil, false
+	}
+
+	activities, exists := g.groupActivities[groupID]
+	if !exists {
+		return []string{}, true
+	}
+
+	return activities, true
 }
 
 func (g *inMemoryGroup) generateInviteCode() string {
@@ -307,16 +326,16 @@ func (g *inMemoryGroup) generateInviteCode() string {
 	for i := range bytes {
 		bytes[i] = byte((now >> (i * 8)) % 256)
 	}
-	
+
 	code := ""
 	hexChars := "0123456789ABCDEF"
 	for _, b := range bytes {
 		code += string(hexChars[b>>4]) + string(hexChars[b&0xF])
 	}
-	
+
 	if _, exists := g.invites[code]; exists {
 		return g.generateInviteCode()
 	}
-	
+
 	return code
 }

@@ -62,7 +62,7 @@ func TestCreateGroupInvalid(t *testing.T) {
 
 func TestReadGroup(t *testing.T) {
 	setupGroupTest()
-	req, err := http.NewRequest("GET", "/groups/1", nil)
+	req, err := http.NewRequest("GET", "/groups/1?requester_id=1", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -322,7 +322,7 @@ func TestGetGroupMembers(t *testing.T) {
 	}
 
 	// Get group members
-	req, err := http.NewRequest("GET", "/groups/1/members", nil)
+	req, err := http.NewRequest("GET", "/groups/1/members?requester_id=1", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -844,5 +844,200 @@ func TestDeleteUserNicknameForbidden(t *testing.T) {
 
 	if status := recorder.Code; status != http.StatusForbidden {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusForbidden)
+	}
+}
+
+func TestGetGroupForbidden(t *testing.T) {
+	setupGroupTest()
+
+	req, err := http.NewRequest("GET", "/groups/1?requester_id=999", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusForbidden {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusForbidden)
+	}
+}
+
+func TestGetGroupAsMember(t *testing.T) {
+	setupGroupTest()
+
+	// First add a user to the group
+	addRequest := map[string]interface{}{
+		"user_id": "2",
+	}
+	body, _ := json.Marshal(addRequest)
+	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	// Now try to get group as member
+	req, err := http.NewRequest("GET", "/groups/1?requester_id=2", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder = httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+}
+
+func TestGetGroupMembersForbidden(t *testing.T) {
+	setupGroupTest()
+
+	req, err := http.NewRequest("GET", "/groups/1/members?requester_id=999", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusForbidden {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusForbidden)
+	}
+}
+
+func TestGetGroupActivitiesAsMember(t *testing.T) {
+	setupGroupTest()
+
+	// First add a user to the group
+	addRequest := map[string]interface{}{
+		"user_id": "2",
+	}
+	body, _ := json.Marshal(addRequest)
+	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	// Get group activities as member
+	req, err := http.NewRequest("GET", "/groups/1/activities?requester_id=2", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder = httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	var response map[string]interface{}
+	if err := json.NewDecoder(recorder.Body).Decode(&response); err != nil {
+		t.Fatal("Failed to decode response body")
+	}
+
+	if groupID, ok := response["group_id"].(string); !ok || groupID != "1" {
+		t.Errorf("Expected group_id to be '1', got %v", groupID)
+	}
+
+	if activities, ok := response["activities"].([]interface{}); !ok {
+		t.Errorf("Expected activities to be an array, got %v", response["activities"])
+	} else if len(activities) != 0 {
+		t.Errorf("Expected 0 activities, got %d", len(activities))
+	}
+}
+
+func TestGetGroupActivitiesForbidden(t *testing.T) {
+	setupGroupTest()
+
+	req, err := http.NewRequest("GET", "/groups/1/activities?requester_id=999", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusForbidden {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusForbidden)
+	}
+}
+
+func TestGetGroupRequiresAuthorization(t *testing.T) {
+	setupGroupTest()
+
+	// Try to get group without being a member
+	req, err := http.NewRequest("GET", "/groups/1?requester_id=999", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusForbidden {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusForbidden)
+	}
+}
+
+func TestGetGroupAllowsGroupMembers(t *testing.T) {
+	setupGroupTest()
+
+	// First add a user to the group
+	addRequest := map[string]interface{}{
+		"user_id": "2",
+	}
+	body, _ := json.Marshal(addRequest)
+	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	// Now try to get group as a member
+	req, err := http.NewRequest("GET", "/groups/1?requester_id=2", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder = httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+}
+
+func TestGetGroupMissingRequesterID(t *testing.T) {
+	setupGroupTest()
+
+	// Try to get group without requester_id
+	req, err := http.NewRequest("GET", "/groups/1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusBadRequest {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
+	}
+}
+
+func TestGetGroupMembersMissingRequesterID(t *testing.T) {
+	setupGroupTest()
+
+	// Try to get group members without requester_id
+	req, err := http.NewRequest("GET", "/groups/1/members", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusBadRequest {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
 	}
 }

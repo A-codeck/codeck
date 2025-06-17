@@ -15,6 +15,7 @@ type GroupModel interface {
 	GetInviteByCode(inviteCode string) (GroupInvite, bool)
 	DeactivateInvite(inviteCode string) bool
 	GetActiveInvites(groupID string) []GroupInvite
+	GetGroupActivities(groupID string) ([]string, bool)
 }
 
 var DefaultGroupModel GroupModel = NewInMemoryGroup()
