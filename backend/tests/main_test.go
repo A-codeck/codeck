@@ -6,6 +6,7 @@ import (
 
 	"backend/controllers"
 	"backend/models/activity"
+	"backend/models/comment"
 	"backend/models/group"
 	"backend/models/user"
 	"backend/routes"
@@ -22,6 +23,9 @@ var (
 
 	testUserRouter *mux.Router
 	testUserModel  *user.InMemoryUserModel
+
+	testCommentRouter *mux.Router
+	testCommentModel  *comment.InMemoryCommentModel
 
 	testLoginRouter *mux.Router
 )
@@ -45,6 +49,11 @@ func TestMain(m *testing.M) {
 	loginController := controllers.NewLoginController(testUserModel)
 	testLoginRouter = mux.NewRouter()
 	routes.RegisterLoginRoutes(testLoginRouter, loginController)
+
+	testCommentModel = comment.NewInMemoryComment()
+	commentController := controllers.NewCommentController(testCommentModel, testActivityModel, testGroupModel)
+	testCommentRouter = mux.NewRouter()
+	routes.RegisterCommentRoutes(testCommentRouter, commentController)
 
 	os.Exit(m.Run())
 }

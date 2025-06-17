@@ -39,3 +39,9 @@ func RegisterUserRoutes(r *mux.Router, userController *controllers.UserControlle
 func RegisterLoginRoutes(r *mux.Router, loginController *controllers.LoginController) {
 	r.HandleFunc("/login", loginController.Login).Methods("POST")
 }
+
+func RegisterCommentRoutes(r *mux.Router, commentController *controllers.CommentController) {
+	r.HandleFunc("/activities/{activity_id}/comments", commentController.GetCommentsByActivity).Methods("GET")
+	r.HandleFunc("/activities/{activity_id}/comments", commentController.CreateComment).Methods("POST")
+	r.HandleFunc("/comments/{comment_id}", commentController.DeleteComment).Methods("DELETE")
+}

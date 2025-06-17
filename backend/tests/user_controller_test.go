@@ -33,9 +33,6 @@ func TestCreateUserValid(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	testUserRouter.ServeHTTP(recorder, req)
 
-	t.Logf("Response status: %d", recorder.Code)
-	t.Logf("Response body: %s", recorder.Body.String())
-
 	if status := recorder.Code; status != http.StatusCreated {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusCreated)
 	}
