@@ -8,6 +8,7 @@ import (
 
 	"backend/models/activity"
 	"backend/models/group"
+	"backend/models/user"
 
 	"backend/routes"
 
@@ -22,9 +23,13 @@ func main() {
 
 	groupController := controllers.NewGroupController(group.DefaultGroupModel)
 	activityController := controllers.NewActivityController(activity.DefaultActivityModel)
+	userController := controllers.NewUserController(user.DefaultUserModel, activity.DefaultActivityModel)
+	loginController := controllers.NewLoginController(user.DefaultUserModel)
 
 	routes.RegisterGroupRoutes(r, groupController)
 	routes.RegisterActivityRoutes(r, activityController)
+	routes.RegisterUserRoutes(r, userController)
+	routes.RegisterLoginRoutes(r, loginController)
 
 	log.Println("Trying to migrate")
 	dsn := "host=db user=my_usr password=my_pwd dbname=codeck port=5432 sslmode=disable"
