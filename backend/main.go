@@ -7,6 +7,7 @@ import (
 	"backend/controllers"
 
 	"backend/models/activity"
+	"backend/models/comment"
 	"backend/models/group"
 	"backend/models/user"
 
@@ -37,9 +38,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
-	if err := db.AutoMigrate(&group.Group{}, &activity.Activity{}); err != nil {
+	if err := db.AutoMigrate(&group.Group{}, &activity.Activity{}, &comment.Comment{}, &user.User{}); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
+	log.Println("Migration successful")
 
 	log.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
