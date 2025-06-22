@@ -12,9 +12,9 @@ import (
 )
 
 func setupCommentTest() {
+	setupActivityTest()
 	testCommentModel.Clear()
 	testCommentModel.SeedDefaultData()
-	setupActivityTest()
 }
 
 func TestGetCommentsByActivityValid(t *testing.T) {
@@ -91,7 +91,7 @@ func TestCreateCommentValid(t *testing.T) {
 	}
 
 	if response.ID == 0 || response.CreatedAt.IsZero() {
-		t.Error("Comment should have ID and CreatedAt fields populated")
+		t.Errorf("Comment should have ID and CreatedAt fields populated, %+v", response)
 	}
 }
 

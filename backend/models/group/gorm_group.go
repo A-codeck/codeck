@@ -1,6 +1,8 @@
 package group
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"time"
 
 	"gorm.io/gorm"
@@ -82,6 +84,15 @@ func (m *GormGroupModel) DeleteUserNickname(groupID, userID int) bool {
 	return result.RowsAffected > 0
 }
 
+func generateInviteCode(n int) string {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "defaultcode" // fallback, should not happen
+	}
+	return base64.URLEncoding.EncodeToString(b)[:n]
+}
+
 func (m *GormGroupModel) CreateInviteLink(groupID, createdBy int, expiresAt *string) (GroupInvite, bool) {
 	var expires *time.Time
 	if expiresAt != nil {
@@ -90,7 +101,8 @@ func (m *GormGroupModel) CreateInviteLink(groupID, createdBy int, expiresAt *str
 			expires = &t
 		}
 	}
-	invite := GroupInvite{GroupID: groupID, CreatedBy: createdBy, ExpiresAt: expires, IsActive: true}
+	inviteCode := generateInviteCode(12)
+	invite := GroupInvite{InviteCode: inviteCode, GroupID: groupID, CreatedBy: createdBy, ExpiresAt: expires, IsActive: true}
 	if err := m.db.Create(&invite).Error; err != nil {
 		return GroupInvite{}, false
 	}

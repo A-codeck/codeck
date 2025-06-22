@@ -368,8 +368,8 @@ func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Requ
 	inviteCode := vars["invite_code"]
 
 	var request struct {
-		UserID      int `json:"user_id"`
-		RequesterID int `json:"requester_id"`
+		UserID   int     `json:"user_id"`
+		Nickname *string `json:"nickname,omitempty"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -377,9 +377,9 @@ func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if request.UserID == 0 || request.RequesterID == 0 {
-		log.Println("Missing user_id or requester_id in join group by invite request")
-		http.Error(w, "Missing user_id or requester_id", http.StatusBadRequest)
+	if request.UserID == 0 {
+		log.Println("Missing user_id in join group by invite request")
+		http.Error(w, "Missing user_id", http.StatusBadRequest)
 		return
 	}
 
@@ -390,7 +390,7 @@ func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	group, exists := gc.Model.GetGroupByID(invite.GroupID)
+	_, exists = gc.Model.GetGroupByID(invite.GroupID)
 	if !exists {
 		http.Error(w, "Group not found", http.StatusNotFound)
 		return
@@ -402,24 +402,26 @@ func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if request.RequesterID != group.CreatorID && request.RequesterID != invite.CreatedBy {
-		log.Printf("Forbidden: requester_id=%d is not allowed to join group_id=%d by invite_code=%s", request.RequesterID, invite.GroupID, inviteCode)
-		http.Error(w, "Forbidden: Only group creator or invite creator can join group by invite", http.StatusForbidden)
-		return
-	}
-
-	success := gc.Model.DeactivateInvite(inviteCode)
-	if !success {
-		log.Printf("Failed to deactivate invite: invite_code=%s", inviteCode)
-		http.Error(w, "Failed to deactivate invite", http.StatusInternalServerError)
-		return
-	}
-
-	success = gc.Model.AddUserToGroup(invite.GroupID, request.UserID)
+	success := gc.Model.AddUserToGroup(invite.GroupID, request.UserID)
 	if !success {
 		log.Printf("Failed to join group: group_id=%d, user_id=%d", invite.GroupID, request.UserID)
 		http.Error(w, "Failed to join group", http.StatusInternalServerError)
 		return
+	}
+
+	// If nickname is provided, set it for the user
+	if request.Nickname != nil {
+		if len(*request.Nickname) > 50 {
+			log.Printf("Nickname too long: user_id=%d, group_id=%d", request.UserID, invite.GroupID)
+			http.Error(w, "Nickname cannot be longer than 50 characters", http.StatusBadRequest)
+			return
+		}
+		nickSuccess := gc.Model.SetUserNickname(invite.GroupID, request.UserID, request.Nickname)
+		if !nickSuccess {
+			log.Printf("Failed to set nickname: group_id=%d, user_id=%d", invite.GroupID, request.UserID)
+			http.Error(w, "Failed to set nickname", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -427,6 +429,7 @@ func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Requ
 		"message":     "Successfully joined group",
 		"group_id":    invite.GroupID,
 		"user_id":     request.UserID,
+		"nickname":    request.Nickname,
 		"invite_code": inviteCode,
 	}
 

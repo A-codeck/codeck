@@ -369,8 +369,14 @@ func TestCreateInviteLinkValid(t *testing.T) {
 		t.Fatal("Failed to decode response body")
 	}
 
-	if invite.InviteCode == "" || invite.GroupID != 1 || invite.CreatedBy != 1 {
-		t.Error("Invalid invite data in response")
+	if invite.InviteCode == "" {
+		t.Error("InviteCode is empty in response")
+	}
+	if invite.GroupID != 1 {
+		t.Errorf("Expected GroupID to be 1, got %v", invite.GroupID)
+	}
+	if invite.CreatedBy != 1 {
+		t.Errorf("Expected CreatedBy to be 1, got %v", invite.CreatedBy)
 	}
 }
 
@@ -428,6 +434,41 @@ func TestJoinGroupByInviteValid(t *testing.T) {
 
 	if status := recorder.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	// Check if nickname was set
+	req, err = http.NewRequest("GET", "/groups/1/members?requester_id=1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	recorder = httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	var response map[string]interface{}
+	if err := json.NewDecoder(recorder.Body).Decode(&response); err != nil {
+		t.Fatal("Failed to decode response body")
+	}
+	members, ok := response["members"].([]interface{})
+	if !ok {
+		t.Fatal("Expected members array in response")
+	}
+	found := false
+	for _, m := range members {
+		member, ok := m.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if id, ok := member["user_id"].(float64); ok && int(id) == 2 {
+			nickname, _ := member["nickname"].(string)
+			if nickname != "NewMember" {
+				t.Errorf("Expected nickname to be 'NewMember', got %v", nickname)
+			}
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Joined user not found in group members")
 	}
 }
 
@@ -937,7 +978,7 @@ func TestGetGroupActivitiesAsMember(t *testing.T) {
 		t.Fatal("Failed to decode response body")
 	}
 
-	if groupID, ok := response["group_id"].(string); !ok || groupID != "1" {
+	if groupID, ok := response["group_id"].(float64); !ok || groupID != 1 {
 		t.Errorf("Expected group_id to be '1', got %v", groupID)
 	}
 

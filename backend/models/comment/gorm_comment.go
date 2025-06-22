@@ -43,7 +43,6 @@ func (m *GormCommentModel) Clear() {
 
 func (m *GormCommentModel) SeedDefaultData() {
 	m.CreateComment(Comment{
-		ID:         1,
 		ActivityID: 1,
 		UserID:     1,
 		Content:    "Great activity!",
