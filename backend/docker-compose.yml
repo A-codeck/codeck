@@ -21,7 +21,7 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USER=my_user
+      - DB_USER=my_usr
       - DB_PASSWORD=my_pwd
       - DB_NAME=codeck
     depends_on:

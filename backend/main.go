@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
-	if err := db.AutoMigrate(&group.Group{}, &activity.Activity{}, &comment.Comment{}, &user.User{}); err != nil {
+	if err := db.AutoMigrate(&group.Group{}, &group.GroupMember{}, &group.GroupInvite{}, &activity.Activity{}, &comment.Comment{}, &user.User{}); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 	log.Println("Migration successful")

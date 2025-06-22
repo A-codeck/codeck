@@ -79,7 +79,7 @@ func TestReadGroup(t *testing.T) {
 		t.Fatal("Failed to decode response body")
 	}
 
-	if group.ID == "" || group.Name == "" || group.StartDate == "" || group.EndDate == "" {
+	if group.ID == 0 || group.Name == "" || group.StartDate.IsZero() || group.EndDate.IsZero() {
 		t.Error("Missing required group fields in response")
 	}
 }
@@ -132,7 +132,7 @@ func TestUpdateGroupInvalid(t *testing.T) {
 func TestDeleteGroupInvalid(t *testing.T) {
 	setupGroupTest()
 	invalidRequest := map[string]interface{}{
-		"creator_id": "2",
+		"creator_id": 2,
 	}
 
 	body, _ := json.Marshal(invalidRequest)
@@ -153,7 +153,7 @@ func TestDeleteGroupInvalid(t *testing.T) {
 func TestDeleteGroupValid(t *testing.T) {
 	setupGroupTest()
 	validRequest := map[string]interface{}{
-		"creator_id": "1",
+		"creator_id": 1,
 	}
 
 	body, _ := json.Marshal(validRequest)
@@ -174,7 +174,7 @@ func TestDeleteGroupValid(t *testing.T) {
 func TestAddUserToGroupValid(t *testing.T) {
 	setupGroupTest()
 	validRequest := map[string]interface{}{
-		"user_id":  "2",
+		"user_id":  2,
 		"nickname": "TestUser",
 	}
 
@@ -218,7 +218,7 @@ func TestAddUserToGroupDuplicate(t *testing.T) {
 	setupGroupTest()
 	// Add user first time
 	validRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(validRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
@@ -246,7 +246,7 @@ func TestRemoveUserFromGroupValid(t *testing.T) {
 	setupGroupTest()
 	// First add a user
 	addRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(addRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
@@ -256,8 +256,8 @@ func TestRemoveUserFromGroupValid(t *testing.T) {
 
 	// Now remove the user
 	removeRequest := map[string]interface{}{
-		"user_id":      "2",
-		"requester_id": "1", // Group creator
+		"user_id":      2,
+		"requester_id": 1, // Group creator
 	}
 	body, _ = json.Marshal(removeRequest)
 	req, err := http.NewRequest("DELETE", "/groups/1/members", bytes.NewBuffer(body))
@@ -278,7 +278,7 @@ func TestRemoveUserFromGroupForbidden(t *testing.T) {
 	setupGroupTest()
 	// First add a user
 	addRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(addRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
@@ -288,8 +288,8 @@ func TestRemoveUserFromGroupForbidden(t *testing.T) {
 
 	// Try to remove user with unauthorized requester
 	removeRequest := map[string]interface{}{
-		"user_id":      "2",
-		"requester_id": "3", // Not group creator or the user themselves
+		"user_id":      2,
+		"requester_id": 3, // Not group creator or the user themselves
 	}
 	body, _ = json.Marshal(removeRequest)
 	req, err := http.NewRequest("DELETE", "/groups/1/members", bytes.NewBuffer(body))
@@ -309,7 +309,7 @@ func TestRemoveUserFromGroupForbidden(t *testing.T) {
 func TestGetGroupMembers(t *testing.T) {
 	setupGroupTest()
 	// Add some users to the group
-	users := []string{"2", "3"}
+	users := []int{2, 3}
 	for _, userID := range users {
 		addRequest := map[string]interface{}{
 			"user_id": userID,
@@ -347,7 +347,7 @@ func TestGetGroupMembers(t *testing.T) {
 func TestCreateInviteLinkValid(t *testing.T) {
 	setupGroupTest()
 	validRequest := map[string]interface{}{
-		"creator_id": "1", // Group creator
+		"creator_id": 1, // Group creator
 	}
 
 	body, _ := json.Marshal(validRequest)
@@ -369,7 +369,7 @@ func TestCreateInviteLinkValid(t *testing.T) {
 		t.Fatal("Failed to decode response body")
 	}
 
-	if invite.InviteCode == "" || invite.GroupID != "1" || invite.CreatedBy != "1" {
+	if invite.InviteCode == "" || invite.GroupID != 1 || invite.CreatedBy != 1 {
 		t.Error("Invalid invite data in response")
 	}
 }
@@ -377,7 +377,7 @@ func TestCreateInviteLinkValid(t *testing.T) {
 func TestCreateInviteLinkForbidden(t *testing.T) {
 	setupGroupTest()
 	invalidRequest := map[string]interface{}{
-		"creator_id": "2", // Not group creator
+		"creator_id": 2, // Not group creator
 	}
 
 	body, _ := json.Marshal(invalidRequest)
@@ -400,7 +400,7 @@ func TestJoinGroupByInviteValid(t *testing.T) {
 
 	// First create an invite
 	createRequest := map[string]interface{}{
-		"creator_id": "1",
+		"creator_id": 1,
 	}
 	body, _ := json.Marshal(createRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/invites", bytes.NewBuffer(body))
@@ -413,7 +413,7 @@ func TestJoinGroupByInviteValid(t *testing.T) {
 
 	// Now use the invite to join
 	joinRequest := map[string]interface{}{
-		"user_id":  "2",
+		"user_id":  2,
 		"nickname": "NewMember",
 	}
 	body, _ = json.Marshal(joinRequest)
@@ -435,7 +435,7 @@ func TestJoinGroupByInviteInvalidCode(t *testing.T) {
 	setupGroupTest()
 
 	joinRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(joinRequest)
 	req, err := http.NewRequest("POST", "/invites/INVALID123/join", bytes.NewBuffer(body))
@@ -457,7 +457,7 @@ func TestJoinGroupByInviteDuplicateUser(t *testing.T) {
 
 	// First create an invite
 	createRequest := map[string]interface{}{
-		"creator_id": "1",
+		"creator_id": 1,
 	}
 	body, _ := json.Marshal(createRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/invites", bytes.NewBuffer(body))
@@ -470,7 +470,7 @@ func TestJoinGroupByInviteDuplicateUser(t *testing.T) {
 
 	// Join first time
 	joinRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ = json.Marshal(joinRequest)
 	req, _ = http.NewRequest("POST", "/invites/"+invite.InviteCode+"/join", bytes.NewBuffer(body))
@@ -500,7 +500,7 @@ func TestGetGroupInvites(t *testing.T) {
 	// Create a couple of invites
 	for i := 0; i < 2; i++ {
 		createRequest := map[string]interface{}{
-			"creator_id": "1",
+			"creator_id": 1,
 		}
 		body, _ := json.Marshal(createRequest)
 		req, _ := http.NewRequest("POST", "/groups/1/invites", bytes.NewBuffer(body))
@@ -537,7 +537,7 @@ func TestDeactivateInviteValid(t *testing.T) {
 
 	// First create an invite
 	createRequest := map[string]interface{}{
-		"creator_id": "1",
+		"creator_id": 1,
 	}
 	body, _ := json.Marshal(createRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/invites", bytes.NewBuffer(body))
@@ -550,7 +550,7 @@ func TestDeactivateInviteValid(t *testing.T) {
 
 	// Deactivate the invite
 	deactivateRequest := map[string]interface{}{
-		"requester_id": "1", // Group creator
+		"requester_id": 1, // Group creator
 	}
 	body, _ = json.Marshal(deactivateRequest)
 	req, err := http.NewRequest("DELETE", "/invites/"+invite.InviteCode+"/deactivate", bytes.NewBuffer(body))
@@ -572,7 +572,7 @@ func TestDeactivateInviteForbidden(t *testing.T) {
 
 	// First create an invite
 	createRequest := map[string]interface{}{
-		"creator_id": "1",
+		"creator_id": 1,
 	}
 	body, _ := json.Marshal(createRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/invites", bytes.NewBuffer(body))
@@ -585,7 +585,7 @@ func TestDeactivateInviteForbidden(t *testing.T) {
 
 	// Try to deactivate with unauthorized user
 	deactivateRequest := map[string]interface{}{
-		"requester_id": "3", // Not group creator or invite creator
+		"requester_id": 3, // Not group creator or invite creator
 	}
 	body, _ = json.Marshal(deactivateRequest)
 	req, err := http.NewRequest("DELETE", "/invites/"+invite.InviteCode+"/deactivate", bytes.NewBuffer(body))
@@ -606,7 +606,7 @@ func TestSetUserNicknameValid(t *testing.T) {
 	setupGroupTest()
 	// First add a user to the group
 	addRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(addRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
@@ -616,8 +616,8 @@ func TestSetUserNicknameValid(t *testing.T) {
 
 	// Now set the nickname
 	nicknameRequest := map[string]interface{}{
-		"user_id":      "2",
-		"requester_id": "2", // User themselves
+		"user_id":      2,
+		"requester_id": 2, // User themselves
 		"nickname":     "CoolNickname",
 	}
 	body, _ = json.Marshal(nicknameRequest)
@@ -648,7 +648,7 @@ func TestSetUserNicknameByGroupCreator(t *testing.T) {
 	setupGroupTest()
 	// First add a user to the group
 	addRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(addRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
@@ -658,8 +658,8 @@ func TestSetUserNicknameByGroupCreator(t *testing.T) {
 
 	// Now set the nickname as group creator
 	nicknameRequest := map[string]interface{}{
-		"user_id":      "2",
-		"requester_id": "1", // Group creator
+		"user_id":      2,
+		"requester_id": 1, // Group creator
 		"nickname":     "AssignedByOwner",
 	}
 	body, _ = json.Marshal(nicknameRequest)
@@ -681,7 +681,7 @@ func TestSetUserNicknameForbidden(t *testing.T) {
 	setupGroupTest()
 	// First add a user to the group
 	addRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(addRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
@@ -691,8 +691,8 @@ func TestSetUserNicknameForbidden(t *testing.T) {
 
 	// Try to set nickname as unauthorized user
 	nicknameRequest := map[string]interface{}{
-		"user_id":      "2",
-		"requester_id": "3", // Neither the user nor group creator
+		"user_id":      2,
+		"requester_id": 3, // Neither the user nor group creator
 		"nickname":     "Unauthorized",
 	}
 	body, _ = json.Marshal(nicknameRequest)
@@ -715,8 +715,8 @@ func TestSetUserNicknameUserNotInGroup(t *testing.T) {
 
 	// Try to set nickname for a user not in the group
 	nicknameRequest := map[string]interface{}{
-		"user_id":      "3", // User not in group
-		"requester_id": "1", // Group creator
+		"user_id":      3, // User not in group
+		"requester_id": 1, // Group creator
 		"nickname":     "NotInGroup",
 	}
 	body, _ := json.Marshal(nicknameRequest)
@@ -738,7 +738,7 @@ func TestSetUserNicknameTooLong(t *testing.T) {
 	setupGroupTest()
 	// First add a user to the group
 	addRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(addRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
@@ -753,8 +753,8 @@ func TestSetUserNicknameTooLong(t *testing.T) {
 	}
 
 	nicknameRequest := map[string]interface{}{
-		"user_id":      "2",
-		"requester_id": "2",
+		"user_id":      2,
+		"requester_id": 2,
 		"nickname":     string(longNickname),
 	}
 	body, _ = json.Marshal(nicknameRequest)
@@ -776,7 +776,7 @@ func TestDeleteUserNicknameValid(t *testing.T) {
 	setupGroupTest()
 	// First add a user with a nickname
 	addRequest := map[string]interface{}{
-		"user_id":  "2",
+		"user_id":  2,
 		"nickname": "InitialNickname",
 	}
 	body, _ := json.Marshal(addRequest)
@@ -787,8 +787,8 @@ func TestDeleteUserNicknameValid(t *testing.T) {
 
 	// Now delete the nickname
 	deleteRequest := map[string]interface{}{
-		"user_id":      "2",
-		"requester_id": "2", // User themselves
+		"user_id":      2,
+		"requester_id": 2, // User themselves
 	}
 	body, _ = json.Marshal(deleteRequest)
 	req, err := http.NewRequest("DELETE", "/groups/1/members/nickname", bytes.NewBuffer(body))
@@ -818,7 +818,7 @@ func TestDeleteUserNicknameForbidden(t *testing.T) {
 	setupGroupTest()
 	// First add a user with a nickname
 	addRequest := map[string]interface{}{
-		"user_id":  "2",
+		"user_id":  2,
 		"nickname": "InitialNickname",
 	}
 	body, _ := json.Marshal(addRequest)
@@ -829,8 +829,8 @@ func TestDeleteUserNicknameForbidden(t *testing.T) {
 
 	// Try to delete nickname as unauthorized user
 	deleteRequest := map[string]interface{}{
-		"user_id":      "2",
-		"requester_id": "3", // Neither the user nor group creator
+		"user_id":      2,
+		"requester_id": 3, // Neither the user nor group creator
 	}
 	body, _ = json.Marshal(deleteRequest)
 	req, err := http.NewRequest("DELETE", "/groups/1/members/nickname", bytes.NewBuffer(body))
@@ -868,7 +868,7 @@ func TestGetGroupAsMember(t *testing.T) {
 
 	// First add a user to the group
 	addRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(addRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
@@ -911,7 +911,7 @@ func TestGetGroupActivitiesAsMember(t *testing.T) {
 
 	// First add a user to the group
 	addRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(addRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))
@@ -986,7 +986,7 @@ func TestGetGroupAllowsGroupMembers(t *testing.T) {
 
 	// First add a user to the group
 	addRequest := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 	}
 	body, _ := json.Marshal(addRequest)
 	req, _ := http.NewRequest("POST", "/groups/1/members", bytes.NewBuffer(body))

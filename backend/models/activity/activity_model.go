@@ -1,11 +1,12 @@
 package activity
 
 type ActivityModel interface {
-	GetActivityByID(id string) (Activity, bool)
-	GetActivitiesByCreatorID(creatorID string) []Activity
-	CreateActivity(group Activity) Activity
-	UpdateActivity(id string, updates map[string]interface{}) (Activity, bool)
-	DeleteActivity(id string) bool
+	GetActivityByID(id int) (Activity, bool)
+	GetActivitiesByCreatorID(creatorID int) []Activity
+	CreateActivity(a Activity) Activity
+	UpdateActivity(id int, updates map[string]interface{}) (Activity, bool)
+	DeleteActivity(id int) bool
 }
 
-var DefaultActivityModel ActivityModel = NewInMemoryActivity()
+// DefaultActivityModel must be set in main.go after DB initialization
+var DefaultActivityModel ActivityModel
