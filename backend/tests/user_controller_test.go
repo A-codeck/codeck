@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"backend/models/activity"
 )
@@ -106,23 +107,23 @@ func TestGetUserActivities(t *testing.T) {
 	testActivityModel.SeedDefaultData()
 
 	testActivityModel.CreateActivity(activity.Activity{
-		CreatorID:   "1",
+		CreatorID:   1,
 		Title:       "Test Activity 1",
-		Date:        "2025-07-01",
+		Date:        time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC),
 		Description: stringPtr("Test description 1"),
 	})
 
 	testActivityModel.CreateActivity(activity.Activity{
-		CreatorID:   "1",
+		CreatorID:   1,
 		Title:       "Test Activity 2",
-		Date:        "2025-07-02",
+		Date:        time.Date(2025, 7, 2, 0, 0, 0, 0, time.UTC),
 		Description: stringPtr("Test description 2"),
 	})
 
 	testActivityModel.CreateActivity(activity.Activity{
-		CreatorID:   "999",
+		CreatorID:   999,
 		Title:       "Other User Activity",
-		Date:        "2025-07-03",
+		Date:        time.Date(2025, 7, 3, 0, 0, 0, 0, time.UTC),
 		Description: stringPtr("Should not be returned"),
 	})
 
@@ -150,7 +151,7 @@ func TestGetUserActivities(t *testing.T) {
 
 	// Verify all activities belong to user "1"
 	for _, activity := range activities {
-		if creatorID, ok := activity["creator_id"].(string); !ok || creatorID != "1" {
+		if creatorID, ok := activity["creator_id"].(float64); !ok || creatorID != 1 {
 			t.Errorf("Activity creator_id should be '1', got %v", activity["creator_id"])
 		}
 	}
