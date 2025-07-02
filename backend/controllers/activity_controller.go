@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"backend/models/activity"
+	"backend/models/responses"
 
 	"github.com/gorilla/mux"
 )
@@ -14,10 +15,25 @@ type ActivityController struct {
 	Model activity.ActivityModel
 }
 
+// swagger imports (used in annotations)
+var (
+	_ = responses.ErrorResponse{}
+)
+
 func NewActivityController(model activity.ActivityModel) *ActivityController {
 	return &ActivityController{Model: model}
 }
 
+// GetActivity godoc
+// @Summary Get activity by ID
+// @Description Get activity information by activity ID
+// @Tags activities
+// @Accept json
+// @Produce json
+// @Param id path string true "Activity ID"
+// @Success 200 {object} activity.Activity
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /activities/{id} [get]
 func (ac *ActivityController) GetActivity(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	activityID := vars["id"]
@@ -31,6 +47,16 @@ func (ac *ActivityController) GetActivity(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(activity)
 }
 
+// CreateActivity godoc
+// @Summary Create a new activity
+// @Description Create a new activity with title, date, and optional image/description
+// @Tags activities
+// @Accept json
+// @Produce json
+// @Param activity body responses.ActivityCreateRequest true "Activity creation data"
+// @Success 201 {object} activity.Activity
+// @Failure 400 {object} responses.ErrorResponse
+// @Router /activities [post]
 func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Request) {
 	var activity activity.Activity
 	if err := json.NewDecoder(r.Body).Decode(&activity); err != nil {
@@ -49,6 +75,18 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(createdActivity)
 }
 
+// UpdateActivity godoc
+// @Summary Update an existing activity
+// @Description Update activity information (title cannot be updated)
+// @Tags activities
+// @Accept json
+// @Produce json
+// @Param id path string true "Activity ID"
+// @Param activity body responses.ActivityUpdateRequest true "Activity update data"
+// @Success 200 {object} activity.Activity
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /activities/{id} [put]
 func (ac *ActivityController) UpdateActivity(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	activityID := vars["id"]
@@ -74,6 +112,32 @@ func (ac *ActivityController) UpdateActivity(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(updatedActivity)
 }
 
+// DeleteActivity godoc
+// @Summary Delete an activity
+// @Description Delete an activity (only creator can delete)
+// @Tags activities
+// @Accept json
+// @Produce json
+// @Param id path string true "Activity ID"
+// @Param request body responses.ActivityDeleteRequest true "Delete request with creator_id"
+// @Success 204 "No Content"
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /activities/{id} [delete]
+// DeleteActivity godoc
+// @Summary Delete an activity
+// @Description Delete an activity (only creator can delete)
+// @Tags activities
+// @Accept json
+// @Produce json
+// @Param id path string true "Activity ID"
+// @Param request body responses.ActivityDeleteRequest true "Delete request with creator_id"
+// @Success 204 "No Content"
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /activities/{id} [delete]
 func (ac *ActivityController) DeleteActivity(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	activityID := vars["id"]

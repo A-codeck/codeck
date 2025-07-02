@@ -1,0 +1,1157 @@
+basePath: /
+definitions:
+  activity.Activity:
+    properties:
+      activity_image:
+        type: string
+      creator_id:
+        type: string
+      date:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  comment.Comment:
+    properties:
+      activity_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  group.Group:
+    properties:
+      creator_id:
+        type: string
+      description:
+        type: string
+      end_date:
+        type: string
+      group_image:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+    type: object
+  group.GroupInvite:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      expires_at:
+        type: string
+      group_id:
+        type: string
+      invite_code:
+        type: string
+      is_active:
+        type: boolean
+    type: object
+  group.GroupMember:
+    properties:
+      group_id:
+        type: string
+      nickname:
+        type: string
+      user_id:
+        type: string
+    type: object
+  responses.ActivityCreateRequest:
+    properties:
+      activity_image:
+        example: https://example.com/image.jpg
+        type: string
+      date:
+        example: "2025-12-31"
+        type: string
+      description:
+        example: A competitive programming contest
+        type: string
+      title:
+        example: Algorithm Contest
+        type: string
+    type: object
+  responses.ActivityDeleteRequest:
+    properties:
+      creator_id:
+        example: user123
+        type: string
+    type: object
+  responses.ActivityUpdateRequest:
+    properties:
+      activity_image:
+        example: https://example.com/image.jpg
+        type: string
+      date:
+        example: "2025-12-31"
+        type: string
+      description:
+        example: Updated description
+        type: string
+    type: object
+  responses.AddUserToGroupRequest:
+    properties:
+      user_id:
+        example: user123
+        type: string
+    type: object
+  responses.AddUserToGroupResponse:
+    properties:
+      group_id:
+        example: group123
+        type: string
+      message:
+        example: User added to group successfully
+        type: string
+      user_id:
+        example: user123
+        type: string
+    type: object
+  responses.CommentCreateRequest:
+    properties:
+      content:
+        example: Great activity!
+        type: string
+      user_id:
+        example: user123
+        type: string
+    type: object
+  responses.CommentDeleteRequest:
+    properties:
+      requester_id:
+        example: user123
+        type: string
+    type: object
+  responses.CommentDeleteResponse:
+    properties:
+      comment_id:
+        example: comment123
+        type: string
+      message:
+        example: Comment deleted successfully
+        type: string
+    type: object
+  responses.CommentsResponse:
+    properties:
+      activity_id:
+        example: activity123
+        type: string
+      comment_count:
+        example: 5
+        type: integer
+      comments:
+        items:
+          $ref: '#/definitions/comment.Comment'
+        type: array
+    type: object
+  responses.CreateInviteRequest:
+    properties:
+      creator_id:
+        example: user123
+        type: string
+      expires_at:
+        example: "2025-12-31T23:59:59Z"
+        type: string
+    type: object
+  responses.DeactivateInviteRequest:
+    properties:
+      requester_id:
+        example: user123
+        type: string
+    type: object
+  responses.DeleteNicknameRequest:
+    properties:
+      requester_id:
+        example: user456
+        type: string
+      user_id:
+        example: user123
+        type: string
+    type: object
+  responses.ErrorResponse:
+    properties:
+      error:
+        example: Invalid request
+        type: string
+    type: object
+  responses.GroupCreateRequest:
+    properties:
+      description:
+        example: A group for studying algorithms
+        type: string
+      end_date:
+        example: "2025-12-31"
+        type: string
+      group_image:
+        example: https://example.com/image.jpg
+        type: string
+      name:
+        example: Study Group
+        type: string
+    type: object
+  responses.GroupDeleteRequest:
+    properties:
+      creator_id:
+        example: user123
+        type: string
+    type: object
+  responses.GroupMembersResponse:
+    properties:
+      group_id:
+        example: group123
+        type: string
+      member_count:
+        example: 3
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/group.GroupMember'
+        type: array
+    type: object
+  responses.GroupUpdateRequest:
+    properties:
+      description:
+        example: Updated description
+        type: string
+      end_date:
+        example: "2025-12-31"
+        type: string
+      group_image:
+        example: https://example.com/image.jpg
+        type: string
+    type: object
+  responses.JoinGroupRequest:
+    properties:
+      user_id:
+        example: user123
+        type: string
+    type: object
+  responses.LoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: password123
+        type: string
+    type: object
+  responses.LoginResponse:
+    properties:
+      token:
+        example: dummy-jwt-token-1
+        type: string
+      user:
+        $ref: '#/definitions/user.User'
+    type: object
+  responses.RemoveUserFromGroupRequest:
+    properties:
+      requester_id:
+        example: user456
+        type: string
+      user_id:
+        example: user123
+        type: string
+    type: object
+  responses.SetNicknameRequest:
+    properties:
+      nickname:
+        example: Cool Coder
+        type: string
+      requester_id:
+        example: user456
+        type: string
+      user_id:
+        example: user123
+        type: string
+    type: object
+  responses.SuccessResponse:
+    properties:
+      message:
+        example: Operation completed successfully
+        type: string
+    type: object
+  responses.UserCreateRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: password123
+        type: string
+    type: object
+  user.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API for CODECK - COmpetição DE Código do Kim. A platform for competitive
+    programmers.
+  license:
+    name: MIT
+    url: https://github.com/your-username/codeck/blob/main/LICENSE
+  termsOfService: http://swagger.io/terms/
+  title: CODECK API
+  version: "1.0"
+paths:
+  /activities:
+    post:
+      consumes:
+      - application/json
+      description: Create a new activity with title, date, and optional image/description
+      parameters:
+      - description: Activity creation data
+        in: body
+        name: activity
+        required: true
+        schema:
+          $ref: '#/definitions/responses.ActivityCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/activity.Activity'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Create a new activity
+      tags:
+      - activities
+  /activities/{activity_id}/comments:
+    get:
+      consumes:
+      - application/json
+      description: Get all comments for a specific activity
+      parameters:
+      - description: Activity ID
+        in: path
+        name: activity_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.CommentsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get comments by activity ID
+      tags:
+      - comments
+    post:
+      consumes:
+      - application/json
+      description: Create a new comment on an activity
+      parameters:
+      - description: Activity ID
+        in: path
+        name: activity_id
+        required: true
+        type: string
+      - description: Comment creation data
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/responses.CommentCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/comment.Comment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Create a new comment
+      tags:
+      - comments
+  /activities/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an activity (only creator can delete)
+      parameters:
+      - description: Activity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Delete request with creator_id
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.ActivityDeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Delete an activity
+      tags:
+      - activities
+    get:
+      consumes:
+      - application/json
+      description: Get activity information by activity ID
+      parameters:
+      - description: Activity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/activity.Activity'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get activity by ID
+      tags:
+      - activities
+    put:
+      consumes:
+      - application/json
+      description: Update activity information (title cannot be updated)
+      parameters:
+      - description: Activity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Activity update data
+        in: body
+        name: activity
+        required: true
+        schema:
+          $ref: '#/definitions/responses.ActivityUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/activity.Activity'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Update an existing activity
+      tags:
+      - activities
+  /comments/{comment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a comment (only comment author or activity creator can delete)
+      parameters:
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: Delete request with requester_id
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.CommentDeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.CommentDeleteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Delete a comment
+      tags:
+      - comments
+  /groups:
+    post:
+      consumes:
+      - application/json
+      description: Create a new group with name, end date, and optional image/description
+      parameters:
+      - description: Group creation data
+        in: body
+        name: group
+        required: true
+        schema:
+          $ref: '#/definitions/responses.GroupCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/group.Group'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Create a new group
+      tags:
+      - groups
+  /groups/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a group (only creator can delete)
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Delete request with creator_id
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.GroupDeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Delete a group
+      tags:
+      - groups
+    get:
+      consumes:
+      - application/json
+      description: Get group information (members only)
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Requester User ID
+        in: query
+        name: requester_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/group.Group'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get group details
+      tags:
+      - groups
+    put:
+      consumes:
+      - application/json
+      description: Update group information (name cannot be updated)
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Group update data
+        in: body
+        name: group
+        required: true
+        schema:
+          $ref: '#/definitions/responses.GroupUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/group.Group'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Update an existing group
+      tags:
+      - groups
+  /groups/{id}/activities:
+    get:
+      consumes:
+      - application/json
+      description: Get all activities for a group (members only)
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Requester User ID
+        in: query
+        name: requester_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/activity.Activity'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get group activities
+      tags:
+      - groups
+  /groups/{id}/invites:
+    get:
+      consumes:
+      - application/json
+      description: Get all invites for a group
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/group.GroupInvite'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get group invites
+      tags:
+      - groups
+    post:
+      consumes:
+      - application/json
+      description: Create an invite link for the group (only group creator can create
+        invites)
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Create invite request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.CreateInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/group.GroupInvite'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Create group invite link
+      tags:
+      - groups
+  /groups/{id}/members:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a user from a group (only group creator or the user themselves
+        can remove)
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Remove user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.RemoveUserFromGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Remove user from group
+      tags:
+      - groups
+    get:
+      consumes:
+      - application/json
+      description: Get all members of a group (members only)
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Requester User ID
+        in: query
+        name: requester_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.GroupMembersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get group members
+      tags:
+      - groups
+    post:
+      consumes:
+      - application/json
+      description: Add a user to a group
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.AddUserToGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/responses.AddUserToGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Add user to group
+      tags:
+      - groups
+  /groups/{id}/members/nickname:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a user's nickname in a group
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Delete nickname request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.DeleteNicknameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.SuccessResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Delete user nickname in group
+      tags:
+      - groups
+    put:
+      consumes:
+      - application/json
+      description: Set or update a user's nickname in a group
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Set nickname request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.SetNicknameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Set user nickname in group
+      tags:
+      - groups
+  /invites/{invite_code}/deactivate:
+    delete:
+      consumes:
+      - application/json
+      description: Deactivate an invite link (only group creator can deactivate)
+      parameters:
+      - description: Invite Code
+        in: path
+        name: invite_code
+        required: true
+        type: string
+      - description: Deactivate invite request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.DeactivateInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.SuccessResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Deactivate group invite
+      tags:
+      - groups
+  /invites/{invite_code}/join:
+    post:
+      consumes:
+      - application/json
+      description: Join a group using an invite code
+      parameters:
+      - description: Invite Code
+        in: path
+        name: invite_code
+        required: true
+        type: string
+      - description: Join group request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.JoinGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.SuccessResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Join group by invite code
+      tags:
+      - groups
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password, returns user data and
+        token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/responses.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Authenticate user
+      tags:
+      - authentication
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with email, name, and password
+      parameters:
+      - description: User creation data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/responses.UserCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/user.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Create a new user
+      tags:
+      - users
+  /users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get user information by user ID (password field excluded)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get user by ID
+      tags:
+      - users
+  /users/{id}/activities:
+    get:
+      consumes:
+      - application/json
+      description: Get all activities created by a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/activity.Activity'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get user activities
+      tags:
+      - users
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

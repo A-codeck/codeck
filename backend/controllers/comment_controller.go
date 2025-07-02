@@ -7,6 +7,7 @@ import (
 	"backend/models/activity"
 	"backend/models/comment"
 	"backend/models/group"
+	"backend/models/responses"
 
 	"github.com/gorilla/mux"
 )
@@ -17,6 +18,11 @@ type CommentController struct {
 	GroupModel    group.GroupModel
 }
 
+// swagger imports (used in annotations)
+var (
+	_ = responses.ErrorResponse{}
+)
+
 func NewCommentController(commentModel comment.CommentModel, activityModel activity.ActivityModel, groupModel group.GroupModel) *CommentController {
 	return &CommentController{
 		CommentModel:  commentModel,
@@ -25,6 +31,16 @@ func NewCommentController(commentModel comment.CommentModel, activityModel activ
 	}
 }
 
+// GetCommentsByActivity godoc
+// @Summary Get comments by activity ID
+// @Description Get all comments for a specific activity
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param activity_id path string true "Activity ID"
+// @Success 200 {object} responses.CommentsResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /activities/{activity_id}/comments [get]
 func (cc *CommentController) GetCommentsByActivity(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	activityID := vars["activity_id"]
@@ -45,6 +61,18 @@ func (cc *CommentController) GetCommentsByActivity(w http.ResponseWriter, r *htt
 	})
 }
 
+// CreateComment godoc
+// @Summary Create a new comment
+// @Description Create a new comment on an activity
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param activity_id path string true "Activity ID"
+// @Param comment body responses.CommentCreateRequest true "Comment creation data"
+// @Success 201 {object} comment.Comment
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /activities/{activity_id}/comments [post]
 func (cc *CommentController) CreateComment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	activityID := vars["activity_id"]
@@ -82,6 +110,19 @@ func (cc *CommentController) CreateComment(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(createdComment)
 }
 
+// DeleteComment godoc
+// @Summary Delete a comment
+// @Description Delete a comment (only comment author or activity creator can delete)
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param comment_id path string true "Comment ID"
+// @Param request body responses.CommentDeleteRequest true "Delete request with requester_id"
+// @Success 200 {object} responses.CommentDeleteResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /comments/{comment_id} [delete]
 func (cc *CommentController) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	commentID := vars["comment_id"]

@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	"backend/models/activity"
 	"backend/models/group"
+	"backend/models/responses"
 
 	"github.com/gorilla/mux"
 )
@@ -14,20 +16,39 @@ type GroupController struct {
 	Model group.GroupModel
 }
 
+// swagger imports (used in annotations)
+var (
+	_ = activity.Activity{}
+	_ = responses.ErrorResponse{}
+)
+
 func NewGroupController(model group.GroupModel) *GroupController {
 	return &GroupController{Model: model}
 }
 
+// GetGroup godoc
+// @Summary Get group details
+// @Description Get group information (members only)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param requester_id query string true "Requester User ID"
+// @Success 200 {object} group.Group
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id} [get]
 func (gc *GroupController) GetGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
-	
+
 	requesterID := r.URL.Query().Get("requester_id")
 	if requesterID == "" {
 		http.Error(w, "Missing requester_id", http.StatusBadRequest)
 		return
 	}
-	
+
 	group, exists := gc.Model.GetGroupByID(groupID)
 	if !exists {
 		http.Error(w, "Group not found", http.StatusNotFound)
@@ -43,6 +64,16 @@ func (gc *GroupController) GetGroup(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(group)
 }
 
+// CreateGroup godoc
+// @Summary Create a new group
+// @Description Create a new group with name, end date, and optional image/description
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param group body responses.GroupCreateRequest true "Group creation data"
+// @Success 201 {object} group.Group
+// @Failure 400 {object} responses.ErrorResponse
+// @Router /groups [post]
 func (gc *GroupController) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	var group group.Group
 	if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
@@ -61,6 +92,18 @@ func (gc *GroupController) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(createdGroup)
 }
 
+// UpdateGroup godoc
+// @Summary Update an existing group
+// @Description Update group information (name cannot be updated)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param group body responses.GroupUpdateRequest true "Group update data"
+// @Success 200 {object} group.Group
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id} [put]
 func (gc *GroupController) UpdateGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
@@ -86,6 +129,19 @@ func (gc *GroupController) UpdateGroup(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedGroup)
 }
 
+// DeleteGroup godoc
+// @Summary Delete a group
+// @Description Delete a group (only creator can delete)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param request body responses.GroupDeleteRequest true "Delete request with creator_id"
+// @Success 204 "No Content"
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id} [delete]
 func (gc *GroupController) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
@@ -122,6 +178,19 @@ func (gc *GroupController) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// AddUserToGroup godoc
+// @Summary Add user to group
+// @Description Add a user to a group
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param request body responses.AddUserToGroupRequest true "Add user request"
+// @Success 201 {object} responses.AddUserToGroupResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Failure 409 {object} responses.ErrorResponse
+// @Router /groups/{id}/members [post]
 func (gc *GroupController) AddUserToGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
@@ -167,6 +236,19 @@ func (gc *GroupController) AddUserToGroup(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(response)
 }
 
+// RemoveUserFromGroup godoc
+// @Summary Remove user from group
+// @Description Remove a user from a group (only group creator or the user themselves can remove)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param request body responses.RemoveUserFromGroupRequest true "Remove user request"
+// @Success 200 {object} responses.SuccessResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id}/members [delete]
 func (gc *GroupController) RemoveUserFromGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
@@ -216,10 +298,23 @@ func (gc *GroupController) RemoveUserFromGroup(w http.ResponseWriter, r *http.Re
 	})
 }
 
+// GetGroupMembers godoc
+// @Summary Get group members
+// @Description Get all members of a group (members only)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param requester_id query string true "Requester User ID"
+// @Success 200 {object} responses.GroupMembersResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id}/members [get]
 func (gc *GroupController) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
-	
+
 	requesterID := r.URL.Query().Get("requester_id")
 	if requesterID == "" {
 		http.Error(w, "Missing requester_id", http.StatusBadRequest)
@@ -251,6 +346,18 @@ func (gc *GroupController) GetGroupMembers(w http.ResponseWriter, r *http.Reques
 	})
 }
 
+// CreateInviteLink godoc
+// @Summary Create group invite link
+// @Description Create an invite link for the group (only group creator can create invites)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param request body responses.CreateInviteRequest true "Create invite request"
+// @Success 201 {object} group.GroupInvite
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id}/invites [post]
 func (gc *GroupController) CreateInviteLink(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
@@ -291,6 +398,18 @@ func (gc *GroupController) CreateInviteLink(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(invite)
 }
 
+// JoinGroupByInvite godoc
+// @Summary Join group by invite code
+// @Description Join a group using an invite code
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param invite_code path string true "Invite Code"
+// @Param request body responses.JoinGroupRequest true "Join group request"
+// @Success 200 {object} responses.SuccessResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Failure 409 {object} responses.ErrorResponse
+// @Router /invites/{invite_code}/join [post]
 func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	inviteCode := vars["invite_code"]
@@ -333,10 +452,20 @@ func (gc *GroupController) JoinGroupByInvite(w http.ResponseWriter, r *http.Requ
 		"user_id":     request.UserID,
 		"invite_code": inviteCode,
 	}
-	
+
 	json.NewEncoder(w).Encode(response)
 }
 
+// GetGroupInvites godoc
+// @Summary Get group invites
+// @Description Get all invites for a group
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Success 200 {array} group.GroupInvite
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id}/invites [get]
 func (gc *GroupController) GetGroupInvites(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
@@ -357,6 +486,18 @@ func (gc *GroupController) GetGroupInvites(w http.ResponseWriter, r *http.Reques
 	})
 }
 
+// DeactivateInvite godoc
+// @Summary Deactivate group invite
+// @Description Deactivate an invite link (only group creator can deactivate)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param invite_code path string true "Invite Code"
+// @Param request body responses.DeactivateInviteRequest true "Deactivate invite request"
+// @Success 200 {object} responses.SuccessResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /invites/{invite_code}/deactivate [delete]
 func (gc *GroupController) DeactivateInvite(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	inviteCode := vars["invite_code"]
@@ -405,6 +546,19 @@ func (gc *GroupController) DeactivateInvite(w http.ResponseWriter, r *http.Reque
 	})
 }
 
+// SetUserNickname godoc
+// @Summary Set user nickname in group
+// @Description Set or update a user's nickname in a group
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param request body responses.SetNicknameRequest true "Set nickname request"
+// @Success 200 {object} responses.SuccessResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id}/members/nickname [put]
 func (gc *GroupController) SetUserNickname(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
@@ -469,6 +623,18 @@ func (gc *GroupController) SetUserNickname(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(response)
 }
 
+// DeleteUserNickname godoc
+// @Summary Delete user nickname in group
+// @Description Remove a user's nickname in a group
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param request body responses.DeleteNicknameRequest true "Delete nickname request"
+// @Success 200 {object} responses.SuccessResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id}/members/nickname [delete]
 func (gc *GroupController) DeleteUserNickname(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
@@ -519,10 +685,23 @@ func (gc *GroupController) DeleteUserNickname(w http.ResponseWriter, r *http.Req
 	})
 }
 
+// GetGroupActivities godoc
+// @Summary Get group activities
+// @Description Get all activities for a group (members only)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param requester_id query string true "Requester User ID"
+// @Success 200 {array} activity.Activity
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id}/activities [get]
 func (gc *GroupController) GetGroupActivities(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]
-	
+
 	requesterID := r.URL.Query().Get("requester_id")
 	if requesterID == "" {
 		http.Error(w, "Missing requester_id", http.StatusBadRequest)
@@ -548,8 +727,8 @@ func (gc *GroupController) GetGroupActivities(w http.ResponseWriter, r *http.Req
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"group_id":        groupID,
-		"activities":      activities,
-		"activity_count":  len(activities),
+		"group_id":       groupID,
+		"activities":     activities,
+		"activity_count": len(activities),
 	})
 }
