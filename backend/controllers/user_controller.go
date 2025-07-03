@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"backend/models/activity"
+	"backend/models/responses"
 	"backend/models/user"
 
 	"github.com/gorilla/mux"
@@ -19,10 +20,25 @@ type UserController struct {
 	ActivityModel activity.ActivityModel
 }
 
+// swagger imports (used in annotations)
+var (
+	_ = responses.ErrorResponse{}
+)
+
 func NewUserController(model user.UserModel, activityModel activity.ActivityModel) *UserController {
 	return &UserController{Model: model, ActivityModel: activityModel}
 }
 
+// GetUser godoc
+// @Summary Get user by ID
+// @Description Get user information by user ID (password field excluded)
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} user.User
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /users/{id} [get]
 func (uc *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userIDStr := vars["id"]
@@ -43,6 +59,17 @@ func (uc *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+// CreateUser godoc
+// @Summary Create a new user
+// @Description Create a new user account with email, name, and password
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body responses.UserCreateRequest true "User creation data"
+// @Success 201 {object} user.User
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 409 {object} responses.ErrorResponse
+// @Router /users [post]
 func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var userInput struct {
 		Email    string `json:"email"`
@@ -83,6 +110,16 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(createdUser)
 }
 
+// GetUserActivities godoc
+// @Summary Get user activities
+// @Description Get all activities created by a specific user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {array} activity.Activity
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /users/{id}/activities [get]
 func (uc *UserController) GetUserActivities(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userIDStr := vars["id"]
