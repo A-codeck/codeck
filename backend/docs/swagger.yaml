@@ -10,6 +10,8 @@ definitions:
         type: string
       description:
         type: string
+      group_id:
+        type: string
       id:
         type: string
       title:
@@ -79,6 +81,9 @@ definitions:
         type: string
       description:
         example: A competitive programming contest
+        type: string
+      group_id:
+        example: group123
         type: string
       title:
         example: Algorithm Contest
@@ -306,16 +311,11 @@ definitions:
     type: object
 host: localhost:8080
 info:
-  contact:
-    email: support@swagger.io
-    name: API Support
-    url: http://www.swagger.io/support
+  contact: {}
   description: API for CODECK - COmpetição DE Código do Kim. A platform for competitive
     programmers.
   license:
     name: MIT
-    url: https://github.com/your-username/codeck/blob/main/LICENSE
-  termsOfService: http://swagger.io/terms/
   title: CODECK API
   version: "1.0"
 paths:
@@ -408,7 +408,10 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Delete an activity (only creator can delete)
+      - application/json
+      description: |-
+        Delete an activity (only creator can delete)
+        Delete an activity (only creator can delete)
       parameters:
       - description: Activity ID
         in: path
@@ -421,7 +424,19 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/responses.ActivityDeleteRequest'
+      - description: Activity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Delete request with creator_id
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.ActivityDeleteRequest'
       produces:
+      - application/json
       - application/json
       responses:
         "204":
@@ -440,6 +455,7 @@ paths:
             $ref: '#/definitions/responses.ErrorResponse'
       summary: Delete an activity
       tags:
+      - activities
       - activities
     get:
       consumes:
@@ -497,6 +513,33 @@ paths:
           schema:
             $ref: '#/definitions/responses.ErrorResponse'
       summary: Update an existing activity
+      tags:
+      - activities
+  /activities/feed:
+    get:
+      consumes:
+      - application/json
+      description: Get activities from all groups the user is a member of
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/activity.Activity'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get user activity feed
       tags:
       - activities
   /comments/{comment_id}:
@@ -1143,6 +1186,33 @@ paths:
           schema:
             $ref: '#/definitions/responses.ErrorResponse'
       summary: Get user activities
+      tags:
+      - users
+  /users/{id}/groups:
+    get:
+      consumes:
+      - application/json
+      description: Get all groups that a user is a member of
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/group.Group'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get user groups
       tags:
       - users
 schemes:

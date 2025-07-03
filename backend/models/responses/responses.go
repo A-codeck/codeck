@@ -93,8 +93,10 @@ type DeleteNicknameRequest struct {
 }
 
 type ActivityCreateRequest struct {
+	CreatorID     string  `json:"creator_id" example:"user123"`
 	Title         string  `json:"title" example:"Algorithm Contest"`
 	Date          string  `json:"date" example:"2025-12-31"`
+	GroupID       *string `json:"group_id,omitempty" example:"group123"`
 	ActivityImage *string `json:"activity_image,omitempty" example:"https://example.com/image.jpg"`
 	Description   *string `json:"description,omitempty" example:"A competitive programming contest"`
 }

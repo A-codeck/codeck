@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"backend/models/activity"
+	"backend/models/group"
 	"backend/models/responses"
 	"backend/models/user"
 
@@ -17,6 +18,7 @@ import (
 type UserController struct {
 	Model         user.UserModel
 	ActivityModel activity.ActivityModel
+	GroupModel    group.GroupModel
 }
 
 // swagger imports (used in annotations)
@@ -24,8 +26,8 @@ var (
 	_ = responses.ErrorResponse{}
 )
 
-func NewUserController(model user.UserModel, activityModel activity.ActivityModel) *UserController {
-	return &UserController{Model: model, ActivityModel: activityModel}
+func NewUserController(model user.UserModel, activityModel activity.ActivityModel, groupModel group.GroupModel) *UserController {
+	return &UserController{Model: model, ActivityModel: activityModel, GroupModel: groupModel}
 }
 
 // GetUser godoc
@@ -126,4 +128,32 @@ func (uc *UserController) GetUserActivities(w http.ResponseWriter, r *http.Reque
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(activities)
+}
+
+// GetUserGroups godoc
+// @Summary Get user groups
+// @Description Get all groups that a user is a member of
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {array} group.Group
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /users/{id}/groups [get]
+func (uc *UserController) GetUserGroups(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := vars["id"]
+
+	// Check if user exists
+	_, exists := uc.Model.GetUserByID(userID)
+	if !exists {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Get all groups for this user
+	groups := uc.GroupModel.GetUserGroups(userID)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(groups)
 }

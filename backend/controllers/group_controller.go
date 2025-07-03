@@ -13,7 +13,8 @@ import (
 )
 
 type GroupController struct {
-	Model group.GroupModel
+	Model         group.GroupModel
+	ActivityModel activity.ActivityModel
 }
 
 // swagger imports (used in annotations)
@@ -22,8 +23,8 @@ var (
 	_ = responses.ErrorResponse{}
 )
 
-func NewGroupController(model group.GroupModel) *GroupController {
-	return &GroupController{Model: model}
+func NewGroupController(model group.GroupModel, activityModel activity.ActivityModel) *GroupController {
+	return &GroupController{Model: model, ActivityModel: activityModel}
 }
 
 // GetGroup godoc
@@ -719,16 +720,9 @@ func (gc *GroupController) GetGroupActivities(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	activities, exists := gc.Model.GetGroupActivities(groupID)
-	if !exists {
-		http.Error(w, "Group not found", http.StatusNotFound)
-		return
-	}
+	// Get activities for this group
+	activities := gc.ActivityModel.GetActivitiesByGroupIDs([]string{groupID})
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"group_id":       groupID,
-		"activities":     activities,
-		"activity_count": len(activities),
-	})
+	json.NewEncoder(w).Encode(activities)
 }

@@ -320,6 +320,25 @@ func (g *inMemoryGroup) GetGroupActivities(groupID string) ([]string, bool) {
 	return activities, true
 }
 
+func (g *inMemoryGroup) GetUserGroups(userID string) []Group {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+
+	var userGroups []Group
+	for groupID, members := range g.groupMembers {
+		for _, member := range members {
+			if member.UserID == userID {
+				if group, exists := g.groups[groupID]; exists {
+					userGroups = append(userGroups, group)
+				}
+				break
+			}
+		}
+	}
+
+	return userGroups
+}
+
 func (g *inMemoryGroup) generateInviteCode() string {
 	bytes := make([]byte, 4)
 	now := time.Now().UnixNano()

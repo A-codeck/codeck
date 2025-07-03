@@ -93,3 +93,22 @@ func (g *inMemoryActivity) SeedDefaultData() {
 		Date:      date,
 	})
 }
+
+func (g *inMemoryActivity) GetActivitiesByGroupIDs(groupIDs []string) []Activity {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+
+	var activities []Activity
+	for _, activity := range g.activitys {
+		if activity.GroupID != nil {
+			for _, groupID := range groupIDs {
+				if *activity.GroupID == groupID {
+					activities = append(activities, activity)
+					break
+				}
+			}
+		}
+	}
+
+	return activities
+}

@@ -36,9 +36,9 @@ import (
 func main() {
 	r := mux.NewRouter()
 
-	groupController := controllers.NewGroupController(group.DefaultGroupModel)
-	activityController := controllers.NewActivityController(activity.DefaultActivityModel)
-	userController := controllers.NewUserController(user.DefaultUserModel, activity.DefaultActivityModel)
+	groupController := controllers.NewGroupController(group.DefaultGroupModel, activity.DefaultActivityModel)
+	activityController := controllers.NewActivityController(activity.DefaultActivityModel, group.DefaultGroupModel)
+	userController := controllers.NewUserController(user.DefaultUserModel, activity.DefaultActivityModel, group.DefaultGroupModel)
 	loginController := controllers.NewLoginController(user.DefaultUserModel)
 
 	routes.RegisterGroupRoutes(r, groupController)

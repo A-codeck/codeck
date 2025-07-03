@@ -9,15 +9,9 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
-        },
+        "contact": {},
         "license": {
-            "name": "MIT",
-            "url": "https://github.com/your-username/codeck/blob/main/LICENSE"
+            "name": "MIT"
         },
         "version": "{{.Version}}"
     },
@@ -53,6 +47,47 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/activity.Activity"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/feed": {
+            "get": {
+                "description": "Get activities from all groups the user is a member of",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activities"
+                ],
+                "summary": "Get user activity feed",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/activity.Activity"
+                            }
                         }
                     },
                     "400": {
@@ -242,18 +277,37 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete an activity (only creator can delete)",
+                "description": "Delete an activity (only creator can delete)\nDelete an activity (only creator can delete)",
                 "consumes": [
+                    "application/json",
                     "application/json"
                 ],
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
+                    "activities",
                     "activities"
                 ],
                 "summary": "Delete an activity",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Activity ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Delete request with creator_id",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/responses.ActivityDeleteRequest"
+                        }
+                    },
                     {
                         "type": "string",
                         "description": "Activity ID",
@@ -1266,6 +1320,47 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/{id}/groups": {
+            "get": {
+                "description": "Get all groups that a user is a member of",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user groups",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/group.Group"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1282,6 +1377,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "group_id": {
                     "type": "string"
                 },
                 "id": {
@@ -1389,6 +1487,10 @@ const docTemplate = `{
                 "description": {
                     "type": "string",
                     "example": "A competitive programming contest"
+                },
+                "group_id": {
+                    "type": "string",
+                    "example": "group123"
                 },
                 "title": {
                     "type": "string",

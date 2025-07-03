@@ -6,13 +6,15 @@ import (
 	"net/http"
 
 	"backend/models/activity"
+	"backend/models/group"
 	"backend/models/responses"
 
 	"github.com/gorilla/mux"
 )
 
 type ActivityController struct {
-	Model activity.ActivityModel
+	Model      activity.ActivityModel
+	GroupModel group.GroupModel
 }
 
 // swagger imports (used in annotations)
@@ -20,8 +22,8 @@ var (
 	_ = responses.ErrorResponse{}
 )
 
-func NewActivityController(model activity.ActivityModel) *ActivityController {
-	return &ActivityController{Model: model}
+func NewActivityController(model activity.ActivityModel, groupModel group.GroupModel) *ActivityController {
+	return &ActivityController{Model: model, GroupModel: groupModel}
 }
 
 // GetActivity godoc
@@ -172,4 +174,36 @@ func (ac *ActivityController) DeleteActivity(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// GetUserFeed godoc
+// @Summary Get user activity feed
+// @Description Get activities from all groups the user is a member of
+// @Tags activities
+// @Accept json
+// @Produce json
+// @Param user_id query string true "User ID"
+// @Success 200 {array} activity.Activity
+// @Failure 400 {object} responses.ErrorResponse
+// @Router /activities/feed [get]
+func (ac *ActivityController) GetUserFeed(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		http.Error(w, "Missing user_id parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Get all groups the user is a member of
+	userGroups := ac.GroupModel.GetUserGroups(userID)
+
+	var groupIDs []string
+	for _, group := range userGroups {
+		groupIDs = append(groupIDs, group.ID)
+	}
+
+	// Get activities from these groups
+	activities := ac.Model.GetActivitiesByGroupIDs(groupIDs)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(activities)
 }
