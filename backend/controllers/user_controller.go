@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 
 	"backend/models/activity"
 	"backend/models/responses"
@@ -40,9 +41,16 @@ func NewUserController(model user.UserModel, activityModel activity.ActivityMode
 // @Router /users/{id} [get]
 func (uc *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userID := vars["id"]
+	userIDStr := vars["id"]
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user id: %v", err)
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
 	user, exists := uc.Model.GetUserByID(userID)
 	if !exists {
+		log.Printf("User not found: id=%d", userID)
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
@@ -79,11 +87,13 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userInput.Email == "" || userInput.Name == "" || userInput.Password == "" {
+		log.Println("Missing required fields in user creation")
 		http.Error(w, "Missing required fields", http.StatusBadRequest)
 		return
 	}
 
 	if _, exists := uc.Model.GetUserByEmail(userInput.Email); exists {
+		log.Printf("Email already in use: %s", userInput.Email)
 		http.Error(w, "Email already in use", http.StatusConflict)
 		return
 	}
@@ -112,11 +122,18 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 // @Router /users/{id}/activities [get]
 func (uc *UserController) GetUserActivities(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userID := vars["id"]
+	userIDStr := vars["id"]
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user id: %v", err)
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
 
 	// Check if user exists
 	_, exists := uc.Model.GetUserByID(userID)
 	if !exists {
+		log.Printf("User not found: id=%d", userID)
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}

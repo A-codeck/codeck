@@ -1,10 +1,11 @@
 package comment
 
 type CommentModel interface {
-	GetCommentByID(id string) (Comment, bool)
-	GetCommentsByActivityID(activityID string) []Comment
+	GetCommentByID(id int) (Comment, bool)
+	GetCommentsByActivityID(activityID int) []Comment
 	CreateComment(comment Comment) Comment
-	DeleteComment(id string) bool
+	DeleteComment(id int) bool
 }
 
-var DefaultCommentModel CommentModel = NewInMemoryComment()
+// DefaultCommentModel must be set in main.go after DB initialization
+var DefaultCommentModel CommentModel

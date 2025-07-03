@@ -78,7 +78,7 @@ func TestReadActivity(t *testing.T) {
 		t.Fatal("Failed to decode response body")
 	}
 
-	if activity.ID == "" || activity.Title == "" || activity.Date == "" {
+	if activity.ID == 0 || activity.Title == "" || activity.Date.IsZero() {
 		t.Error("Missing required activity fields in response")
 	}
 }
@@ -88,7 +88,6 @@ func TestUpdateActivityValid(t *testing.T) {
 	validUpdate := map[string]interface{}{
 		"description":    "Updated description",
 		"activity_image": "https://wallsdesk.com/wp-content/uploads/2017/01/Octopus-Wallpapers-HD.jpg",
-		"end_date":       "2026-01-01",
 	}
 
 	body, _ := json.Marshal(validUpdate)
@@ -130,7 +129,7 @@ func TestUpdateActivityInvalid(t *testing.T) {
 func TestDeleteActivityInvalid(t *testing.T) {
 	setupActivityTest()
 	invalidRequest := map[string]interface{}{
-		"creator_id": "2",
+		"creator_id": 2,
 	}
 
 	body, _ := json.Marshal(invalidRequest)
@@ -151,7 +150,7 @@ func TestDeleteActivityInvalid(t *testing.T) {
 func TestDeleteActivityValid(t *testing.T) {
 	setupActivityTest()
 	validRequest := map[string]interface{}{
-		"creator_id": "1",
+		"creator_id": 1,
 	}
 
 	body, _ := json.Marshal(validRequest)

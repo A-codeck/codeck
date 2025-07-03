@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"strconv"
 
 	"backend/models/activity"
 	"backend/models/comment"
@@ -43,10 +45,17 @@ func NewCommentController(commentModel comment.CommentModel, activityModel activ
 // @Router /activities/{activity_id}/comments [get]
 func (cc *CommentController) GetCommentsByActivity(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	activityID := vars["activity_id"]
+	activityIDStr := vars["activity_id"]
+	activityID, err := strconv.Atoi(activityIDStr)
+	if err != nil {
+		log.Printf("Invalid activity_id: %v", err)
+		http.Error(w, "Invalid activity_id", http.StatusBadRequest)
+		return
+	}
 
 	_, exists := cc.ActivityModel.GetActivityByID(activityID)
 	if !exists {
+		log.Printf("Activity not found: id=%d", activityID)
 		http.Error(w, "Activity not found", http.StatusNotFound)
 		return
 	}
@@ -75,25 +84,34 @@ func (cc *CommentController) GetCommentsByActivity(w http.ResponseWriter, r *htt
 // @Router /activities/{activity_id}/comments [post]
 func (cc *CommentController) CreateComment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	activityID := vars["activity_id"]
+	activityIDStr := vars["activity_id"]
+	activityID, err := strconv.Atoi(activityIDStr)
+	if err != nil {
+		log.Printf("Invalid activity_id: %v", err)
+		http.Error(w, "Invalid activity_id", http.StatusBadRequest)
+		return
+	}
 
 	_, exists := cc.ActivityModel.GetActivityByID(activityID)
 	if !exists {
+		log.Printf("Activity not found: id=%d", activityID)
 		http.Error(w, "Activity not found", http.StatusNotFound)
 		return
 	}
 
 	var request struct {
-		UserID  string `json:"user_id"`
+		UserID  int    `json:"user_id"`
 		Content string `json:"content"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		log.Printf("Failed to decode request payload: %v", err)
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	if request.UserID == "" || request.Content == "" {
+	if request.UserID == 0 || request.Content == "" {
+		log.Println("Missing required fields (user_id, content)")
 		http.Error(w, "Missing required fields (user_id, content)", http.StatusBadRequest)
 		return
 	}
@@ -125,14 +143,20 @@ func (cc *CommentController) CreateComment(w http.ResponseWriter, r *http.Reques
 // @Router /comments/{comment_id} [delete]
 func (cc *CommentController) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	commentID := vars["comment_id"]
-
-	existingComment, exists := cc.CommentModel.GetCommentByID(commentID)
-	if !exists {
-		http.Error(w, "Comment not found", http.StatusNotFound)
+	commentIDStr := vars["comment_id"]
+	commentID, err := strconv.Atoi(commentIDStr)
+	if err != nil {
+		log.Printf("Invalid comment_id: %v", err)
+		http.Error(w, "Invalid comment_id", http.StatusBadRequest)
 		return
 	}
 
+	existingComment, exists := cc.CommentModel.GetCommentByID(commentID)
+	if !exists {
+		log.Printf("Comment not found: id=%d", commentID)
+		http.Error(w, "Comment not found", http.StatusNotFound)
+		return
+	}
 	targetActivity, exists := cc.ActivityModel.GetActivityByID(existingComment.ActivityID)
 	if !exists {
 		http.Error(w, "Activity not found", http.StatusNotFound)
@@ -140,7 +164,7 @@ func (cc *CommentController) DeleteComment(w http.ResponseWriter, r *http.Reques
 	}
 
 	var request struct {
-		RequesterID string `json:"requester_id"`
+		RequesterID int `json:"requester_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -148,7 +172,7 @@ func (cc *CommentController) DeleteComment(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if request.RequesterID == "" {
+	if request.RequesterID == 0 {
 		http.Error(w, "Missing requester_id", http.StatusBadRequest)
 		return
 	}
