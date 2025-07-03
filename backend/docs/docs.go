@@ -9,15 +9,9 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
-        },
+        "contact": {},
         "license": {
-            "name": "MIT",
-            "url": "https://github.com/your-username/codeck/blob/main/LICENSE"
+            "name": "MIT"
         },
         "version": "{{.Version}}"
     },
@@ -242,18 +236,37 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete an activity (only creator can delete)",
+                "description": "Delete an activity (only creator can delete)\nDelete an activity (only creator can delete)",
                 "consumes": [
+                    "application/json",
                     "application/json"
                 ],
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
+                    "activities",
                     "activities"
                 ],
                 "summary": "Delete an activity",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Activity ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Delete request with creator_id",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/responses.ActivityDeleteRequest"
+                        }
+                    },
                     {
                         "type": "string",
                         "description": "Activity ID",
@@ -410,14 +423,14 @@ const docTemplate = `{
                 "summary": "Get group details",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Group ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Requester User ID",
                         "name": "requester_id",
                         "in": "query",
@@ -572,14 +585,14 @@ const docTemplate = `{
                 "summary": "Get group activities",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Group ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Requester User ID",
                         "name": "requester_id",
                         "in": "query",
@@ -724,14 +737,14 @@ const docTemplate = `{
                 "summary": "Get group members",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Group ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Requester User ID",
                         "name": "requester_id",
                         "in": "query",
@@ -1275,8 +1288,11 @@ const docTemplate = `{
                 "activity_image": {
                     "type": "string"
                 },
-                "creator_id": {
+                "createdAt": {
                     "type": "string"
+                },
+                "creator_id": {
+                    "type": "integer"
                 },
                 "date": {
                     "type": "string"
@@ -1285,9 +1301,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "title": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1296,7 +1315,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "activity_id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "content": {
                     "type": "string"
@@ -1305,18 +1324,24 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },
         "group.Group": {
             "type": "object",
             "properties": {
-                "creator_id": {
+                "created_at": {
                     "type": "string"
+                },
+                "creator_id": {
+                    "type": "integer"
                 },
                 "description": {
                     "type": "string"
@@ -1328,12 +1353,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string"
                 },
                 "start_date": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -1345,13 +1373,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "created_by": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "expires_at": {
                     "type": "string"
                 },
                 "group_id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "invite_code": {
                     "type": "string"
@@ -1365,13 +1393,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "group_id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "nickname": {
                     "type": "string"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },
@@ -1705,13 +1733,19 @@ const docTemplate = `{
         "user.User": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
