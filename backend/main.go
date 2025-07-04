@@ -42,7 +42,7 @@ func main() {
 	// Add Swagger endpoint
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 	// Migrate db
-	log.Println("Trying to ate")
+	log.Println("Trying to migrate")
 	dsn := "host=db user=my_usr password=my_pwd dbname=codeck port=5432 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
