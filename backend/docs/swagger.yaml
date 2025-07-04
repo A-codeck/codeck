@@ -4,34 +4,42 @@ definitions:
     properties:
       activity_image:
         type: string
-      creator_id:
+      createdAt:
         type: string
+      creator_id:
+        type: integer
       date:
         type: string
       description:
         type: string
       id:
-        type: string
+        type: integer
       title:
+        type: string
+      updatedAt:
         type: string
     type: object
   comment.Comment:
     properties:
       activity_id:
-        type: string
+        type: integer
       content:
         type: string
       created_at:
         type: string
       id:
+        type: integer
+      updated_at:
         type: string
       user_id:
-        type: string
+        type: integer
     type: object
   group.Group:
     properties:
-      creator_id:
+      created_at:
         type: string
+      creator_id:
+        type: integer
       description:
         type: string
       end_date:
@@ -39,10 +47,12 @@ definitions:
       group_image:
         type: string
       id:
-        type: string
+        type: integer
       name:
         type: string
       start_date:
+        type: string
+      updated_at:
         type: string
     type: object
   group.GroupInvite:
@@ -50,11 +60,11 @@ definitions:
       created_at:
         type: string
       created_by:
-        type: string
+        type: integer
       expires_at:
         type: string
       group_id:
-        type: string
+        type: integer
       invite_code:
         type: string
       is_active:
@@ -63,11 +73,11 @@ definitions:
   group.GroupMember:
     properties:
       group_id:
-        type: string
+        type: integer
       nickname:
         type: string
       user_id:
-        type: string
+        type: integer
     type: object
   responses.ActivityCreateRequest:
     properties:
@@ -297,25 +307,24 @@ definitions:
     type: object
   user.User:
     properties:
+      created_at:
+        type: string
       email:
         type: string
       id:
-        type: string
+        type: integer
       name:
+        type: string
+      updated_at:
         type: string
     type: object
 host: localhost:8080
 info:
-  contact:
-    email: support@swagger.io
-    name: API Support
-    url: http://www.swagger.io/support
+  contact: {}
   description: API for CODECK - COmpetição DE Código do Kim. A platform for competitive
     programmers.
   license:
     name: MIT
-    url: https://github.com/your-username/codeck/blob/main/LICENSE
-  termsOfService: http://swagger.io/terms/
   title: CODECK API
   version: "1.0"
 paths:
@@ -408,7 +417,10 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Delete an activity (only creator can delete)
+      - application/json
+      description: |-
+        Delete an activity (only creator can delete)
+        Delete an activity (only creator can delete)
       parameters:
       - description: Activity ID
         in: path
@@ -421,7 +433,19 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/responses.ActivityDeleteRequest'
+      - description: Activity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Delete request with creator_id
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/responses.ActivityDeleteRequest'
       produces:
+      - application/json
       - application/json
       responses:
         "204":
@@ -440,6 +464,7 @@ paths:
             $ref: '#/definitions/responses.ErrorResponse'
       summary: Delete an activity
       tags:
+      - activities
       - activities
     get:
       consumes:
@@ -610,12 +635,12 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: Requester User ID
         in: query
         name: requester_id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -682,12 +707,12 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: Requester User ID
         in: query
         name: requester_id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -823,12 +848,12 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: Requester User ID
         in: query
         name: requester_id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
