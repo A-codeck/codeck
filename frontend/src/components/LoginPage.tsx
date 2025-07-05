@@ -50,6 +50,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onToggleMode, isRegisterMode }) =
           password: formData.password,
         });
         
+        // Small delay to ensure database transaction is complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // After successful registration, login
         const loginResponse = await apiService.login({
           email: formData.email,
@@ -67,7 +70,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onToggleMode, isRegisterMode }) =
         login(loginResponse.user, loginResponse.token);
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'An error occurred');
+      setError(err.response?.data?.message || err.response?.data || err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
