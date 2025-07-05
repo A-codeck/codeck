@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"backend/models/activity"
 	"backend/models/group"
@@ -38,9 +39,16 @@ func NewActivityController(model activity.ActivityModel, groupModel group.GroupM
 // @Router /activities/{id} [get]
 func (ac *ActivityController) GetActivity(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	activityID := vars["id"]
+	activityIDStr := vars["id"]
+	activityID, err := strconv.Atoi(activityIDStr)
+	if err != nil {
+		log.Printf("Invalid activity id: %v", err)
+		http.Error(w, "Invalid activity id", http.StatusBadRequest)
+		return
+	}
 	activity, exists := ac.Model.GetActivityByID(activityID)
 	if !exists {
+		log.Printf("Activity not found: id=%d", activityID)
 		http.Error(w, "Activity not found", http.StatusNotFound)
 		return
 	}
@@ -60,14 +68,34 @@ func (ac *ActivityController) GetActivity(w http.ResponseWriter, r *http.Request
 // @Failure 400 {object} responses.ErrorResponse
 // @Router /activities [post]
 func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Request) {
+	var raw map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
+		log.Printf("Failed to decode request payload: %v", err)
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+	if dateStr, ok := raw["date"].(string); ok && len(dateStr) == 10 {
+		raw["date"] = dateStr + "T00:00:00Z"
+	}
+	fixed, _ := json.Marshal(raw)
 	var activity activity.Activity
-	if err := json.NewDecoder(r.Body).Decode(&activity); err != nil {
+	if err := json.Unmarshal(fixed, &activity); err != nil {
+		log.Printf("Failed to decode request payload: %v", err)
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	if activity.Title == "" || activity.Date == "" {
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
+	if activity.Title == "" || activity.Date.IsZero() || activity.GroupID == 0 {
+		log.Println("Missing required fields in activity creation")
+		http.Error(w, "Missing required fields: title, date, and group_id are required", http.StatusBadRequest)
+		return
+	}
+
+	// Validate that the group exists
+	_, groupExists := ac.GroupModel.GetGroupByID(activity.GroupID)
+	if !groupExists {
+		log.Printf("Group not found: id=%d", activity.GroupID)
+		http.Error(w, "Group not found", http.StatusNotFound)
 		return
 	}
 
@@ -91,21 +119,30 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 // @Router /activities/{id} [put]
 func (ac *ActivityController) UpdateActivity(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	activityID := vars["id"]
+	activityIDStr := vars["id"]
+	activityID, err := strconv.Atoi(activityIDStr)
+	if err != nil {
+		log.Printf("Invalid activity id: %v", err)
+		http.Error(w, "Invalid activity id", http.StatusBadRequest)
+		return
+	}
 
 	var updates map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		log.Printf("Failed to decode request payload: %v", err)
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
 	if _, ok := updates["name"].(string); ok {
+		log.Println("Name field cannot be updated")
 		http.Error(w, "Name field cannot be updated", http.StatusBadRequest)
 		return
 	}
 
 	updatedActivity, exists := ac.Model.UpdateActivity(activityID, updates)
 	if !exists {
+		log.Printf("Activity not found: id=%d", activityID)
 		http.Error(w, "Activity not found", http.StatusNotFound)
 		return
 	}
@@ -142,9 +179,16 @@ func (ac *ActivityController) UpdateActivity(w http.ResponseWriter, r *http.Requ
 // @Router /activities/{id} [delete]
 func (ac *ActivityController) DeleteActivity(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	activityID := vars["id"]
+	activityIDStr := vars["id"]
+	activityID, err := strconv.Atoi(activityIDStr)
+	if err != nil {
+		log.Printf("Invalid activity id: %v", err)
+		http.Error(w, "Invalid activity id", http.StatusBadRequest)
+		return
+	}
 	activity, exists := ac.Model.GetActivityByID(activityID)
 	if !exists {
+		log.Printf("Activity not found: id=%d", activityID)
 		http.Error(w, "Activity not found", http.StatusNotFound)
 		return
 	}
@@ -156,19 +200,22 @@ func (ac *ActivityController) DeleteActivity(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	creatorID, ok := request["creator_id"].(string)
+	creatorIDFloat, ok := request["creator_id"].(float64)
 	if !ok {
+		log.Println("Missing creator_id in delete activity request")
 		http.Error(w, "Missing creator_id", http.StatusBadRequest)
 		return
 	}
+	creatorID := int(creatorIDFloat)
 
 	if creatorID != activity.CreatorID {
-		// Activity exists but creator_id is invalid
+		log.Printf("Forbidden: creator_id=%d does not match activity.CreatorID=%d", creatorID, activity.CreatorID)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
 	if !ac.Model.DeleteActivity(activityID) {
+		log.Printf("Activity not found for delete: id=%d", activityID)
 		http.Error(w, "Activity not found", http.StatusNotFound)
 		return
 	}
@@ -187,16 +234,23 @@ func (ac *ActivityController) DeleteActivity(w http.ResponseWriter, r *http.Requ
 // @Failure 400 {object} responses.ErrorResponse
 // @Router /activities/feed [get]
 func (ac *ActivityController) GetUserFeed(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("user_id")
-	if userID == "" {
+	userIDStr := r.URL.Query().Get("user_id")
+	if userIDStr == "" {
 		http.Error(w, "Missing user_id parameter", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user_id: %v", err)
+		http.Error(w, "Invalid user_id", http.StatusBadRequest)
 		return
 	}
 
 	// Get all groups the user is a member of
 	userGroups := ac.GroupModel.GetUserGroups(userID)
 
-	var groupIDs []string
+	var groupIDs []int
 	for _, group := range userGroups {
 		groupIDs = append(groupIDs, group.ID)
 	}

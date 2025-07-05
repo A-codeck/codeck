@@ -4,36 +4,44 @@ definitions:
     properties:
       activity_image:
         type: string
-      creator_id:
+      created_at:
         type: string
+      creator_id:
+        type: integer
       date:
         type: string
       description:
         type: string
       group_id:
-        type: string
+        type: integer
       id:
-        type: string
+        type: integer
       title:
+        type: string
+      updated_at:
         type: string
     type: object
   comment.Comment:
     properties:
       activity_id:
-        type: string
+        type: integer
       content:
         type: string
       created_at:
         type: string
       id:
+        type: integer
+      updated_at:
         type: string
       user_id:
-        type: string
+        type: integer
     type: object
   group.Group:
     properties:
-      creator_id:
+      created_at:
         type: string
+      creator_id:
+        type: integer
       description:
         type: string
       end_date:
@@ -41,10 +49,12 @@ definitions:
       group_image:
         type: string
       id:
-        type: string
+        type: integer
       name:
         type: string
       start_date:
+        type: string
+      updated_at:
         type: string
     type: object
   group.GroupInvite:
@@ -52,11 +62,11 @@ definitions:
       created_at:
         type: string
       created_by:
-        type: string
+        type: integer
       expires_at:
         type: string
       group_id:
-        type: string
+        type: integer
       invite_code:
         type: string
       is_active:
@@ -65,17 +75,20 @@ definitions:
   group.GroupMember:
     properties:
       group_id:
-        type: string
+        type: integer
       nickname:
         type: string
       user_id:
-        type: string
+        type: integer
     type: object
   responses.ActivityCreateRequest:
     properties:
       activity_image:
         example: https://example.com/image.jpg
         type: string
+      creator_id:
+        example: 1
+        type: integer
       date:
         example: "2025-12-31"
         type: string
@@ -83,8 +96,8 @@ definitions:
         example: A competitive programming contest
         type: string
       group_id:
-        example: group123
-        type: string
+        example: 1
+        type: integer
       title:
         example: Algorithm Contest
         type: string
@@ -92,8 +105,8 @@ definitions:
   responses.ActivityDeleteRequest:
     properties:
       creator_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.ActivityUpdateRequest:
     properties:
@@ -110,20 +123,20 @@ definitions:
   responses.AddUserToGroupRequest:
     properties:
       user_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.AddUserToGroupResponse:
     properties:
       group_id:
-        example: group123
-        type: string
+        example: 1
+        type: integer
       message:
         example: User added to group successfully
         type: string
       user_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.CommentCreateRequest:
     properties:
@@ -131,20 +144,20 @@ definitions:
         example: Great activity!
         type: string
       user_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.CommentDeleteRequest:
     properties:
       requester_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.CommentDeleteResponse:
     properties:
       comment_id:
-        example: comment123
-        type: string
+        example: 1
+        type: integer
       message:
         example: Comment deleted successfully
         type: string
@@ -152,8 +165,8 @@ definitions:
   responses.CommentsResponse:
     properties:
       activity_id:
-        example: activity123
-        type: string
+        example: 1
+        type: integer
       comment_count:
         example: 5
         type: integer
@@ -165,8 +178,8 @@ definitions:
   responses.CreateInviteRequest:
     properties:
       creator_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
       expires_at:
         example: "2025-12-31T23:59:59Z"
         type: string
@@ -174,17 +187,17 @@ definitions:
   responses.DeactivateInviteRequest:
     properties:
       requester_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.DeleteNicknameRequest:
     properties:
       requester_id:
-        example: user456
-        type: string
+        example: 2
+        type: integer
       user_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.ErrorResponse:
     properties:
@@ -210,14 +223,14 @@ definitions:
   responses.GroupDeleteRequest:
     properties:
       creator_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.GroupMembersResponse:
     properties:
       group_id:
-        example: group123
-        type: string
+        example: 1
+        type: integer
       member_count:
         example: 3
         type: integer
@@ -241,8 +254,8 @@ definitions:
   responses.JoinGroupRequest:
     properties:
       user_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.LoginRequest:
     properties:
@@ -264,11 +277,11 @@ definitions:
   responses.RemoveUserFromGroupRequest:
     properties:
       requester_id:
-        example: user456
-        type: string
+        example: 2
+        type: integer
       user_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.SetNicknameRequest:
     properties:
@@ -276,11 +289,11 @@ definitions:
         example: Cool Coder
         type: string
       requester_id:
-        example: user456
-        type: string
+        example: 2
+        type: integer
       user_id:
-        example: user123
-        type: string
+        example: 1
+        type: integer
     type: object
   responses.SuccessResponse:
     properties:
@@ -302,11 +315,15 @@ definitions:
     type: object
   user.User:
     properties:
+      created_at:
+        type: string
       email:
         type: string
       id:
-        type: string
+        type: integer
       name:
+        type: string
+      updated_at:
         type: string
     type: object
 host: localhost:8080
@@ -653,12 +670,12 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: Requester User ID
         in: query
         name: requester_id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -725,12 +742,12 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: Requester User ID
         in: query
         name: requester_id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -866,12 +883,12 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: Requester User ID
         in: query
         name: requester_id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:

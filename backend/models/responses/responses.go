@@ -1,6 +1,7 @@
 package responses
 
 import (
+	"backend/models/activity"
 	"backend/models/comment"
 	"backend/models/group"
 	"backend/models/user"
@@ -44,59 +45,65 @@ type GroupUpdateRequest struct {
 }
 
 type GroupDeleteRequest struct {
-	CreatorID string `json:"creator_id" example:"user123"`
+	CreatorID int `json:"creator_id" example:"1"`
 }
 
 type AddUserToGroupRequest struct {
-	UserID string `json:"user_id" example:"user123"`
+	UserID int `json:"user_id" example:"1"`
 }
 
 type RemoveUserFromGroupRequest struct {
-	UserID      string `json:"user_id" example:"user123"`
-	RequesterID string `json:"requester_id" example:"user456"`
+	UserID      int `json:"user_id" example:"1"`
+	RequesterID int `json:"requester_id" example:"2"`
 }
 
 type AddUserToGroupResponse struct {
 	Message string `json:"message" example:"User added to group successfully"`
-	GroupID string `json:"group_id" example:"group123"`
-	UserID  string `json:"user_id" example:"user123"`
+	GroupID int    `json:"group_id" example:"1"`
+	UserID  int    `json:"user_id" example:"1"`
 }
 
 type GroupMembersResponse struct {
-	GroupID     string              `json:"group_id" example:"group123"`
+	GroupID     int                 `json:"group_id" example:"1"`
 	Members     []group.GroupMember `json:"members"`
 	MemberCount int                 `json:"member_count" example:"3"`
 }
 
+type GroupActivitiesResponse struct {
+	GroupID        int                `json:"group_id" example:"1"`
+	Activities     []activity.Activity `json:"activities"`
+	ActivityCount  int                `json:"activity_count" example:"5"`
+}
+
 type CreateInviteRequest struct {
-	CreatorID string  `json:"creator_id" example:"user123"`
+	CreatorID int     `json:"creator_id" example:"1"`
 	ExpiresAt *string `json:"expires_at,omitempty" example:"2025-12-31T23:59:59Z"`
 }
 
 type JoinGroupRequest struct {
-	UserID string `json:"user_id" example:"user123"`
+	UserID int `json:"user_id" example:"1"`
 }
 
 type DeactivateInviteRequest struct {
-	RequesterID string `json:"requester_id" example:"user123"`
+	RequesterID int `json:"requester_id" example:"1"`
 }
 
 type SetNicknameRequest struct {
-	UserID      string `json:"user_id" example:"user123"`
-	RequesterID string `json:"requester_id" example:"user456"`
+	UserID      int    `json:"user_id" example:"1"`
+	RequesterID int    `json:"requester_id" example:"2"`
 	Nickname    string `json:"nickname" example:"Cool Coder"`
 }
 
 type DeleteNicknameRequest struct {
-	UserID      string `json:"user_id" example:"user123"`
-	RequesterID string `json:"requester_id" example:"user456"`
+	UserID      int `json:"user_id" example:"1"`
+	RequesterID int `json:"requester_id" example:"2"`
 }
 
 type ActivityCreateRequest struct {
-	CreatorID     string  `json:"creator_id" example:"user123"`
+	CreatorID     int     `json:"creator_id" example:"1"`
+	GroupID       int     `json:"group_id" example:"1"`
 	Title         string  `json:"title" example:"Algorithm Contest"`
 	Date          string  `json:"date" example:"2025-12-31"`
-	GroupID       *string `json:"group_id,omitempty" example:"group123"`
 	ActivityImage *string `json:"activity_image,omitempty" example:"https://example.com/image.jpg"`
 	Description   *string `json:"description,omitempty" example:"A competitive programming contest"`
 }
@@ -108,25 +115,25 @@ type ActivityUpdateRequest struct {
 }
 
 type ActivityDeleteRequest struct {
-	CreatorID string `json:"creator_id" example:"user123"`
+	CreatorID int `json:"creator_id" example:"1"`
 }
 
 type CommentCreateRequest struct {
-	UserID  string `json:"user_id" example:"user123"`
+	UserID  int    `json:"user_id" example:"1"`
 	Content string `json:"content" example:"Great activity!"`
 }
 
 type CommentDeleteRequest struct {
-	RequesterID string `json:"requester_id" example:"user123"`
+	RequesterID int `json:"requester_id" example:"1"`
 }
 
 type CommentsResponse struct {
-	ActivityID   string            `json:"activity_id" example:"activity123"`
+	ActivityID   int               `json:"activity_id" example:"1"`
 	Comments     []comment.Comment `json:"comments"`
 	CommentCount int               `json:"comment_count" example:"5"`
 }
 
 type CommentDeleteResponse struct {
 	Message   string `json:"message" example:"Comment deleted successfully"`
-	CommentID string `json:"comment_id" example:"comment123"`
+	CommentID int    `json:"comment_id" example:"1"`
 }

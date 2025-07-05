@@ -22,6 +22,7 @@ import (
 	"backend/controllers"
 
 	"backend/models/activity"
+	"backend/models/comment"
 	"backend/models/group"
 	"backend/models/user"
 
@@ -31,10 +32,30 @@ import (
 
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
 	r := mux.NewRouter()
+
+	// Add Swagger endpoint
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	// Migrate db
+	log.Println("Trying to migrate")
+	dsn := "host=db user=my_usr password=my_pwd dbname=codeck port=5432 sslmode=disable"
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Failed to connect to the database: %v", err)
+	}
+	if err := db.AutoMigrate(&group.Group{}, &group.GroupMember{}, &group.GroupInvite{}, &activity.Activity{}, &comment.Comment{}, &user.User{}); err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
+	log.Println("Migration successful")
+
+	group.DefaultGroupModel = group.NewGormGroupModel(db)
+	activity.DefaultActivityModel = activity.NewGormActivityModel(db)
+	user.DefaultUserModel = user.NewGormUserModel(db)
 
 	groupController := controllers.NewGroupController(group.DefaultGroupModel, activity.DefaultActivityModel)
 	activityController := controllers.NewActivityController(activity.DefaultActivityModel, group.DefaultGroupModel)
@@ -46,10 +67,8 @@ func main() {
 	routes.RegisterUserRoutes(r, userController)
 	routes.RegisterLoginRoutes(r, loginController)
 
-	// Add Swagger endpoint
-	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
-
 	log.Println("Server is running on port 8080")
 	log.Println("API Documentation available at: http://localhost:8080/swagger/index.html")
 	log.Fatal(http.ListenAndServe(":8080", r))
+
 }

@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"backend/models/comment"
 )
 
 func setupCommentTest() {
+	setupActivityTest()
 	testCommentModel.Clear()
 	testCommentModel.SeedDefaultData()
-	setupActivityTest()
 }
 
 func TestGetCommentsByActivityValid(t *testing.T) {
@@ -35,8 +36,8 @@ func TestGetCommentsByActivityValid(t *testing.T) {
 		t.Fatal("Failed to decode response body")
 	}
 
-	if activityID, ok := response["activity_id"].(string); !ok || activityID != "1" {
-		t.Errorf("Expected activity_id to be '1', got %v", activityID)
+	if activityID, ok := response["activity_id"].(float64); !ok || int(activityID) != 1 {
+		t.Errorf("Expected activity_id to be 1, got %v", activityID)
 	}
 
 	if comments, ok := response["comments"].([]interface{}); !ok || len(comments) == 0 {
@@ -62,7 +63,7 @@ func TestGetCommentsByActivityNotFound(t *testing.T) {
 func TestCreateCommentValid(t *testing.T) {
 	setupCommentTest()
 	validComment := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 		"content": "This is a test comment!",
 	}
 
@@ -85,12 +86,12 @@ func TestCreateCommentValid(t *testing.T) {
 		t.Fatal("Failed to decode response body")
 	}
 
-	if response.UserID != "2" || response.Content != "This is a test comment!" || response.ActivityID != "1" {
+	if response.UserID != 2 || response.Content != "This is a test comment!" || response.ActivityID != 1 {
 		t.Errorf("Comment data mismatch: got %+v", response)
 	}
 
-	if response.ID == "" || response.CreatedAt == "" {
-		t.Error("Comment should have ID and CreatedAt fields populated")
+	if response.ID == 0 || response.CreatedAt.IsZero() {
+		t.Errorf("Comment should have ID and CreatedAt fields populated, %+v", response)
 	}
 }
 
@@ -119,7 +120,7 @@ func TestCreateCommentInvalidPayload(t *testing.T) {
 func TestCreateCommentActivityNotFound(t *testing.T) {
 	setupCommentTest()
 	validComment := map[string]interface{}{
-		"user_id": "2",
+		"user_id": 2,
 		"content": "This is a test comment!",
 	}
 
@@ -143,17 +144,17 @@ func TestDeleteCommentByAuthor(t *testing.T) {
 
 	// First create a comment
 	newComment := testCommentModel.CreateComment(comment.Comment{
-		ActivityID: "1",
-		UserID:     "2",
+		ActivityID: 1,
+		UserID:     2,
 		Content:    "Comment to be deleted",
 	})
 
 	deleteRequest := map[string]interface{}{
-		"requester_id": "2", // Same user who created the comment
+		"requester_id": 2, // Same user who created the comment
 	}
 
 	body, _ := json.Marshal(deleteRequest)
-	req, err := http.NewRequest("DELETE", "/comments/"+newComment.ID, bytes.NewBuffer(body))
+	req, err := http.NewRequest("DELETE", "/comments/"+strconv.Itoa(newComment.ID), bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,19 +177,19 @@ func TestDeleteCommentByAuthor(t *testing.T) {
 func TestDeleteCommentByActivityCreator(t *testing.T) {
 	setupCommentTest()
 
-	// Create a comment from user "2" on activity "1" (created by user "1")
+	// Create a comment from user 2 on activity 1 (created by user 1)
 	newComment := testCommentModel.CreateComment(comment.Comment{
-		ActivityID: "1",
-		UserID:     "2",
+		ActivityID: 1,
+		UserID:     2,
 		Content:    "Comment to be deleted by activity creator",
 	})
 
 	deleteRequest := map[string]interface{}{
-		"requester_id": "1", // Activity creator (different from comment author)
+		"requester_id": 1, // Activity creator (different from comment author)
 	}
 
 	body, _ := json.Marshal(deleteRequest)
-	req, err := http.NewRequest("DELETE", "/comments/"+newComment.ID, bytes.NewBuffer(body))
+	req, err := http.NewRequest("DELETE", "/comments/"+strconv.Itoa(newComment.ID), bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,19 +212,19 @@ func TestDeleteCommentByActivityCreator(t *testing.T) {
 func TestDeleteCommentForbidden(t *testing.T) {
 	setupCommentTest()
 
-	// Create a comment from user "2" on activity "1" (created by user "1")
+	// Create a comment from user 2 on activity 1 (created by user 1)
 	newComment := testCommentModel.CreateComment(comment.Comment{
-		ActivityID: "1",
-		UserID:     "2",
+		ActivityID: 1,
+		UserID:     2,
 		Content:    "Comment that should not be deletable by unauthorized user",
 	})
 
 	deleteRequest := map[string]interface{}{
-		"requester_id": "3", // Different user (not comment author or activity creator)
+		"requester_id": 3, // Different user (not comment author or activity creator)
 	}
 
 	body, _ := json.Marshal(deleteRequest)
-	req, err := http.NewRequest("DELETE", "/comments/"+newComment.ID, bytes.NewBuffer(body))
+	req, err := http.NewRequest("DELETE", "/comments/"+strconv.Itoa(newComment.ID), bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -247,7 +248,7 @@ func TestDeleteCommentNotFound(t *testing.T) {
 	setupCommentTest()
 
 	deleteRequest := map[string]interface{}{
-		"requester_id": "1",
+		"requester_id": 1,
 	}
 
 	body, _ := json.Marshal(deleteRequest)
