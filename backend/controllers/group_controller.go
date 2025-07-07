@@ -9,6 +9,7 @@ import (
 	"backend/models/activity"
 	"backend/models/group"
 	"backend/models/responses"
+	"backend/models/user"
 
 	"github.com/gorilla/mux"
 )
@@ -16,6 +17,7 @@ import (
 type GroupController struct {
 	Model         group.GroupModel
 	ActivityModel activity.ActivityModel
+	UserModel     user.UserModel // Add UserModel for user existence check
 }
 
 // swagger imports (used in annotations)
@@ -24,8 +26,8 @@ var (
 	_ = responses.ErrorResponse{}
 )
 
-func NewGroupController(model group.GroupModel, activityModel activity.ActivityModel) *GroupController {
-	return &GroupController{Model: model, ActivityModel: activityModel}
+func NewGroupController(model group.GroupModel, activityModel activity.ActivityModel, userModel user.UserModel) *GroupController {
+	return &GroupController{Model: model, ActivityModel: activityModel, UserModel: userModel}
 }
 
 // GetGroup godoc
@@ -93,6 +95,18 @@ func (gc *GroupController) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
+	creatorID, ok := raw["creator_id"].(float64)
+	if !ok || int(creatorID) == 0 {
+		log.Println("Missing or invalid creator_id in group creation")
+		http.Error(w, "Missing or invalid creator_id", http.StatusBadRequest)
+		return
+	}
+	// Check if user exists
+	if _, exists := gc.UserModel.GetUserByID(int(creatorID)); !exists {
+		log.Printf("User with id %d does not exist", int(creatorID))
+		http.Error(w, "Creator user does not exist", http.StatusBadRequest)
+		return
+	}
 	if dateStr, ok := raw["end_date"].(string); ok && len(dateStr) == 10 {
 		raw["end_date"] = dateStr + "T00:00:00Z"
 	}
@@ -103,6 +117,8 @@ func (gc *GroupController) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
+	// Set the creator_id explicitly
+	group.CreatorID = int(creatorID)
 
 	if group.Name == "" || group.EndDate.IsZero() {
 		log.Println("Missing required fields in group creation")
@@ -111,6 +127,11 @@ func (gc *GroupController) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	createdGroup := gc.Model.CreateGroup(group)
+	// Add the creator as a member of the group
+	if createdGroup.CreatorID != 0 && createdGroup.ID != 0 {
+		gc.Model.AddUserToGroup(createdGroup.ID, createdGroup.CreatorID)
+	}
+	log.Printf("Group created with ID: %d", createdGroup.ID)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(createdGroup)

@@ -41,9 +41,8 @@ func TestMain(m *testing.M) {
 	testActivityModel = activity.NewGormActivityModel(db)
 	testUserModel = user.NewGormUserModel(db)
 	testCommentModel = comment.NewGormCommentModel(db)
-	
-	
-	groupController := controllers.NewGroupController(testGroupModel, testActivityModel)
+
+	groupController := controllers.NewGroupController(testGroupModel, testActivityModel, testUserModel)
 	testGroupRouter = mux.NewRouter()
 	routes.RegisterGroupRoutes(testGroupRouter, groupController)
 

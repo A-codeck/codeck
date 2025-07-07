@@ -150,7 +150,6 @@ func (m *GormGroupModel) Clear() {
 
 func (m *GormGroupModel) SeedDefaultData() {
 	m.CreateGroup(Group{
-		ID:          1,
 		CreatorID:   1,
 		Name:        "New Group",
 		StartDate:   time.Now(),
