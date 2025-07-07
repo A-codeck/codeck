@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 	"backend/models/activity"
 	"backend/models/group"
 	"backend/models/responses"
+	"backend/utils"
 
 	"github.com/gorilla/mux"
 )
@@ -58,58 +60,119 @@ func (ac *ActivityController) GetActivity(w http.ResponseWriter, r *http.Request
 }
 
 // CreateActivity godoc
-// @Summary Create a new activity
-// @Description Create a new activity with title, date, and optional image/description
+// @Summary Create a new activity with image upload
+// @Description Create a new activity with mandatory image upload, title, and date
 // @Tags activities
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
-// @Param activity body responses.ActivityCreateRequest true "Activity creation data"
+// @Param title formData string true "Activity Title"
+// @Param description formData string false "Activity Description"
+// @Param date formData string true "Activity Date (YYYY-MM-DD)"
+// @Param group_id formData int false "Group ID (0 for personal activity)"
+// @Param creator_id formData int true "Creator ID"
+// @Param image formData file true "Activity Image"
 // @Success 201 {object} activity.Activity
 // @Failure 400 {object} responses.ErrorResponse
 // @Router /activities [post]
 func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Request) {
-	var raw map[string]interface{}
-	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
-		log.Printf("Failed to decode request payload: %v", err)
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	// Parse multipart form (max 32MB)
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		log.Printf("Failed to parse multipart form: %v", err)
+		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
 		return
 	}
-	if dateStr, ok := raw["date"].(string); ok && len(dateStr) == 10 {
-		raw["date"] = dateStr + "T00:00:00Z"
+
+	// Get form values
+	title := r.FormValue("title")
+	description := r.FormValue("description")
+	date := r.FormValue("date")
+	groupIDStr := r.FormValue("group_id")
+	creatorIDStr := r.FormValue("creator_id")
+
+	// Validate required fields
+	if title == "" || date == "" || creatorIDStr == "" {
+		log.Println("Missing required fields in activity creation")
+		http.Error(w, "Missing required fields: title, date, and creator_id are required", http.StatusBadRequest)
+		return
 	}
 
-	// Handle empty group_id as personal activity
-	if groupID, ok := raw["group_id"]; ok {
-		if groupID == "" {
-			raw["group_id"] = 0
+	// Parse creator_id
+	creatorID, err := strconv.Atoi(creatorIDStr)
+	if err != nil {
+		log.Printf("Invalid creator_id: %v", err)
+		http.Error(w, "Invalid creator_id", http.StatusBadRequest)
+		return
+	}
+
+	// Parse group_id (default to 0 for personal activity)
+	groupID := 0
+	if groupIDStr != "" {
+		groupID, err = strconv.Atoi(groupIDStr)
+		if err != nil {
+			log.Printf("Invalid group_id: %v", err)
+			http.Error(w, "Invalid group_id", http.StatusBadRequest)
+			return
 		}
 	}
 
-	fixed, _ := json.Marshal(raw)
-	var activity activity.Activity
-	if err := json.Unmarshal(fixed, &activity); err != nil {
-		log.Printf("Failed to decode request payload: %v", err)
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	// Get uploaded image file
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		log.Printf("No image file provided: %v", err)
+		http.Error(w, "Image file is required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Save the image
+	uploadResult, err := utils.SaveImage(file, header)
+	if err != nil {
+		log.Printf("Failed to save image: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to save image: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	if activity.Title == "" || activity.Date.IsZero() {
-		log.Println("Missing required fields in activity creation")
-		http.Error(w, "Missing required fields: title and date are required", http.StatusBadRequest)
+	// Fix date format if needed
+	if len(date) == 10 {
+		date = date + "T00:00:00Z"
+	}
+
+	// Create activity struct
+	activityData := map[string]interface{}{
+		"title":          title,
+		"description":    description,
+		"activity_image": uploadResult.URL,
+		"date":           date,
+		"group_id":       groupID,
+		"creator_id":     creatorID,
+	}
+
+	// Convert to JSON and back to handle date parsing
+	jsonData, _ := json.Marshal(activityData)
+	var activityObj activity.Activity
+	if err := json.Unmarshal(jsonData, &activityObj); err != nil {
+		log.Printf("Failed to create activity object: %v", err)
+		// Clean up uploaded file on error
+		utils.DeleteImage(uploadResult.Filename)
+		http.Error(w, "Invalid activity data", http.StatusBadRequest)
 		return
 	}
 
-	// Only validate group if group_id is not zero (not a personal activity)
-	if activity.GroupID != 0 {
-		_, groupExists := ac.GroupModel.GetGroupByID(activity.GroupID)
+	// Validate group if specified
+	if activityObj.GroupID != 0 {
+		_, groupExists := ac.GroupModel.GetGroupByID(activityObj.GroupID)
 		if !groupExists {
-			log.Printf("Group not found: id=%d", activity.GroupID)
+			log.Printf("Group not found: id=%d", activityObj.GroupID)
+			// Clean up uploaded file on error
+			utils.DeleteImage(uploadResult.Filename)
 			http.Error(w, "Group not found", http.StatusNotFound)
 			return
 		}
 	}
 
-	createdActivity := ac.Model.CreateActivity(activity)
+	// Create activity in database
+	createdActivity := ac.Model.CreateActivity(activityObj)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(createdActivity)

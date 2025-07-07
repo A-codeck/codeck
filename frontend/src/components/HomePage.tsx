@@ -44,22 +44,22 @@ const HomePage: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       {/* Header */}
-      <AppBar position="static" sx={{ bgcolor: 'primary.main' }}>
+      <AppBar position="static" elevation={0} sx={{ backgroundColor: (theme) => theme.palette.background.default }}>
         <Toolbar>
           <Typography variant="h2" component="div" sx={{ flexGrow: 1 }}>
-            CODECK
+        CODECK
           </Typography>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body1">
-              Welcome, {user?.name}
-            </Typography>
-            
-            <IconButton
-              size="large"
-              edge="end"
-              aria-label="account menu"
-              onClick={handleMenuOpen}
+        <Typography variant="body1">
+          Welcome, {user?.name}
+        </Typography>
+        
+        <IconButton
+          size="large"
+          edge="end"
+          aria-label="account menu"
+          onClick={handleMenuOpen}
               color="inherit"
             >
               <Avatar sx={{ width: 32, height: 32 }}>

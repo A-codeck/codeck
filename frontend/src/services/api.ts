@@ -34,6 +34,12 @@ class ApiService {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      
+      // If the data is FormData, remove the default Content-Type to let browser set it
+      if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+      }
+      
       return config;
     });
   }
@@ -67,7 +73,21 @@ class ApiService {
 
   // Activity endpoints
   async createActivity(activityData: ActivityCreateRequest): Promise<Activity> {
-    const response = await this.api.post<Activity>('/activities', activityData);
+    const formData = new FormData();
+    formData.append('title', activityData.title);
+    formData.append('description', activityData.description);
+    formData.append('date', activityData.date);
+    formData.append('creator_id', activityData.creator_id);
+    formData.append('image', activityData.image);
+    
+    if (activityData.group_id) {
+      formData.append('group_id', activityData.group_id);
+    } else {
+      formData.append('group_id', '0');
+    }
+
+    // Don't set Content-Type header - let the browser set it automatically with boundary
+    const response = await this.api.post<Activity>('/activities', formData);
     return response.data;
   }
 

@@ -122,7 +122,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
 
       {/* Error State */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 3, backgroundColor: (theme) => theme.palette.background.default }}>
           {error}
         </Alert>
       )}

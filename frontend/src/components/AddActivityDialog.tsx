@@ -29,14 +29,15 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
   onActivityAdded,
 }) => {
   const { user } = useAuth();
-  const [formData, setFormData] = useState<ActivityCreateRequest>({
+  const [formData, setFormData] = useState<Omit<ActivityCreateRequest, 'image'>>({
     title: '',
     description: '',
-    activity_image: '',
     date: new Date().toISOString().split('T')[0], // Today's date
     group_id: '',
     creator_id: user?.id || '', // Include creator_id from auth context
   });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -64,7 +65,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.name as keyof ActivityCreateRequest;
+    const name = e.target.name as keyof Omit<ActivityCreateRequest, 'image'>;
     const value = e.target.value as string;
     
     setFormData({
@@ -73,8 +74,36 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
     });
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+        return;
+      }
+      
+      // Validate file size (10MB max)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      
+      setSelectedImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSelectChange = (e: any) => {
-    const name = e.target.name as keyof ActivityCreateRequest;
+    const name = e.target.name as keyof Omit<ActivityCreateRequest, 'image'>;
     const value = e.target.value as string;
     
     setFormData({
@@ -85,21 +114,28 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !selectedImage) return;
 
     try {
       setLoading(true);
-      await apiService.createActivity(formData);
+      
+      const activityData: ActivityCreateRequest = {
+        ...formData,
+        image: selectedImage,
+      };
+      
+      await apiService.createActivity(activityData);
       
       // Reset form
       setFormData({
         title: '',
         description: '',
-        activity_image: '',
         date: new Date().toISOString().split('T')[0],
         group_id: '',
         creator_id: user.id, // Reset creator_id to current user
       });
+      setSelectedImage(null);
+      setImagePreview(null);
       
       onActivityAdded();
       onClose();
@@ -157,15 +193,40 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
             placeholder="Tell us more about what you did, what you learned, or any challenges you faced..."
           />
           
-          <TextField
-            fullWidth
-            name="activity_image"
-            label="Image URL (optional)"
-            value={formData.activity_image}
-            onChange={handleInputChange}
-            sx={{ mb: 2 }}
-            placeholder="https://example.com/image.jpg"
-          />
+          <Box sx={{ mb: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              fullWidth
+              sx={{ mb: 1 }}
+            >
+              {selectedImage ? 'Change Image' : 'Upload Image *'}
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </Button>
+            {selectedImage && (
+              <Typography variant="body2" color="text.secondary">
+                Selected: {selectedImage.name}
+              </Typography>
+            )}
+            {imagePreview && (
+              <Box sx={{ mt: 1, textAlign: 'center' }}>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  style={{
+                    maxWidth: '200px',
+                    maxHeight: '200px',
+                    borderRadius: '4px',
+                  }}
+                />
+              </Box>
+            )}
+          </Box>
           
           <TextField
             fullWidth
@@ -209,7 +270,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
           onClick={handleSubmit}
           variant="contained"
           color="secondary"
-          disabled={loading || !formData.title || !formData.date}
+          disabled={loading || !formData.title || !formData.date || !selectedImage}
         >
           {loading ? 'Posting...' : 'Post Activity'}
         </Button>

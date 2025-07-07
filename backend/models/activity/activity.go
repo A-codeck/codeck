@@ -12,7 +12,7 @@ type Activity struct {
 	GroupID       int            `gorm:"not null;index" json:"group_id"`
 	Title         string         `gorm:"type:text;not null" json:"title"`
 	Date          time.Time      `gorm:"type:date;not null" json:"date"`
-	ActivityImage *string        `gorm:"type:text" json:"activity_image,omitempty"`
+	ActivityImage string         `gorm:"type:text;not null" json:"activity_image"`
 	Description   *string        `gorm:"type:text" json:"description,omitempty"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
