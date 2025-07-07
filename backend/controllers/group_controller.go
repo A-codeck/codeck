@@ -80,7 +80,7 @@ func (gc *GroupController) GetGroup(w http.ResponseWriter, r *http.Request) {
 
 // CreateGroup godoc
 // @Summary Create a new group
-// @Description Create a new group with name, end date, and optional image/description
+// @Description Create a new group with name and optional image/description
 // @Tags groups
 // @Accept json
 // @Produce json
@@ -107,9 +107,6 @@ func (gc *GroupController) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Creator user does not exist", http.StatusBadRequest)
 		return
 	}
-	if dateStr, ok := raw["end_date"].(string); ok && len(dateStr) == 10 {
-		raw["end_date"] = dateStr + "T00:00:00Z"
-	}
 	fixed, _ := json.Marshal(raw)
 	var group group.Group
 	if err := json.Unmarshal(fixed, &group); err != nil {
@@ -120,7 +117,7 @@ func (gc *GroupController) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	// Set the creator_id explicitly
 	group.CreatorID = int(creatorID)
 
-	if group.Name == "" || group.EndDate.IsZero() {
+	if group.Name == "" {
 		log.Println("Missing required fields in group creation")
 		http.Error(w, "Missing required fields", http.StatusBadRequest)
 		return

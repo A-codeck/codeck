@@ -20,7 +20,6 @@ func TestCreateGroupValid(t *testing.T) {
 	setupGroupTest(t)
 	validGroup := map[string]interface{}{
 		"name":        "newest Group",
-		"end_date":    "2025-12-31",
 		"group_image": "image_url",
 		"description": "A test group",
 		"creator_id":  1, // Ensure creator_id is present
@@ -61,9 +60,9 @@ func TestCreateGroupValid(t *testing.T) {
 func TestCreateGroupInvalid(t *testing.T) {
 	setupGroupTest(t)
 	invalidGroup := map[string]interface{}{
-		// Missing data
-		"end_date": "2025-12-31",
-		// Intentionally omit creator_id for invalid test
+		// Missing data - just description, no name or creator_id
+		"description": "A test group",
+		// Intentionally omit name and creator_id for invalid test
 	}
 	body, _ := json.Marshal(invalidGroup)
 	req, err := http.NewRequest("POST", "/groups", bytes.NewBuffer(body))
@@ -99,7 +98,7 @@ func TestReadGroup(t *testing.T) {
 		t.Fatal("Failed to decode response body")
 	}
 
-	if group.ID == 0 || group.Name == "" || group.StartDate.IsZero() || group.EndDate.IsZero() {
+	if group.ID == 0 || group.Name == "" {
 		t.Error("Missing required group fields in response")
 	}
 }
@@ -109,7 +108,6 @@ func TestUpdateGroupValid(t *testing.T) {
 	validUpdate := map[string]interface{}{
 		"description": "Updated description",
 		"group_image": "new_image_url",
-		"end_date":    "2026-01-01",
 	}
 
 	body, _ := json.Marshal(validUpdate)
@@ -1107,7 +1105,6 @@ func TestGroupCreatorIsMemberOnCreation(t *testing.T) {
 	setupGroupTest(t)
 	newGroup := map[string]interface{}{
 		"name":        "Creator Membership Group",
-		"end_date":    "2025-12-31",
 		"group_image": "image_url",
 		"description": "Group with creator as member",
 		"creator_id":  1,

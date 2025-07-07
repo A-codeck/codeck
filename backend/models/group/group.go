@@ -10,8 +10,6 @@ type Group struct {
 	ID          int            `gorm:"primaryKey;autoIncrement" json:"id"`
 	CreatorID   int            `gorm:"not null;index" json:"creator_id"`
 	Name        string         `gorm:"type:text;not null" json:"name"`
-	StartDate   time.Time      `gorm:"type:date;not null" json:"start_date"`
-	EndDate     time.Time      `gorm:"type:date;not null" json:"end_date"`
 	GroupImage  *string        `gorm:"type:text" json:"group_image,omitempty"`
 	Description *string        `gorm:"type:text" json:"description,omitempty"`
 	CreatedAt   time.Time      `json:"created_at"`

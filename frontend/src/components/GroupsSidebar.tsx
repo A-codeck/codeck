@@ -44,7 +44,6 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
   const [newGroupData, setNewGroupData] = useState<GroupCreateRequest>({
     name: '',
     description: '',
-    end_date: '',
     creator_id: '',
   });
 
@@ -102,7 +101,6 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
       setNewGroupData({
         name: '',
         description: '',
-        end_date: '',
         creator_id: '',
       });
       onGroupsChange();
@@ -224,18 +222,6 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
             rows={3}
             sx={{ mb: 2 }}
           />
-          <TextField
-            fullWidth
-            name="end_date"
-            label="End Date"
-            type="date"
-            value={newGroupData.end_date}
-            onChange={handleInputChange}
-            required
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateDialogOpen(false)}>
@@ -245,7 +231,7 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
             onClick={handleCreateGroup}
             variant="contained"
             color="secondary"
-            disabled={!newGroupData.name || !newGroupData.end_date}
+            disabled={!newGroupData.name}
           >
             Create Group
           </Button>

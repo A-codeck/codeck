@@ -152,8 +152,6 @@ func (m *GormGroupModel) SeedDefaultData() {
 	m.CreateGroup(Group{
 		CreatorID:   1,
 		Name:        "New Group",
-		StartDate:   time.Now(),
-		EndDate:     time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		Description: stringPtr("A test group"),
 	})
 
