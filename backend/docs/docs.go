@@ -20,9 +20,9 @@ const docTemplate = `{
     "paths": {
         "/activities": {
             "post": {
-                "description": "Create a new activity with title, date, and optional image/description",
+                "description": "Create a new activity with mandatory image upload, title, date, and at least one group",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -30,16 +30,48 @@ const docTemplate = `{
                 "tags": [
                     "activities"
                 ],
-                "summary": "Create a new activity",
+                "summary": "Create a new activity with image upload and mandatory group selection",
                 "parameters": [
                     {
-                        "description": "Activity creation data",
-                        "name": "activity",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/responses.ActivityCreateRequest"
-                        }
+                        "type": "string",
+                        "description": "Activity Title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Activity Description",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Activity Date (YYYY-MM-DD)",
+                        "name": "date",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated Group IDs (at least one required)",
+                        "name": "group_ids",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Creator ID",
+                        "name": "creator_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Activity Image",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -87,6 +119,47 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/activity.Activity"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/feed-with-groups": {
+            "get": {
+                "description": "Get activities from all groups the user is a member of, with group names included",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activities"
+                ],
+                "summary": "Get user activity feed with group information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/activity.ActivityWithGroups"
                             }
                         }
                     },
@@ -411,7 +484,7 @@ const docTemplate = `{
         },
         "/groups": {
             "post": {
-                "description": "Create a new group with name, end date, and optional image/description",
+                "description": "Create a new group with name and optional image/description",
                 "consumes": [
                     "application/json"
                 ],
@@ -644,10 +717,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/activity.Activity"
-                            }
+                            "$ref": "#/definitions/responses.GroupActivitiesResponse"
                         }
                     },
                     "400": {
@@ -1382,8 +1452,54 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "group_id": {
+                "group_ids": {
+                    "description": "Many-to-many relationship with groups",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "id": {
                     "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "activity.ActivityWithGroups": {
+            "type": "object",
+            "properties": {
+                "activity_image": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "creator_id": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "group_ids": {
+                    "description": "Many-to-many relationship with groups",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "group_names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "id": {
                     "type": "integer"
@@ -1431,9 +1547,6 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "end_date": {
-                    "type": "string"
-                },
                 "group_image": {
                     "type": "string"
                 },
@@ -1441,9 +1554,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "start_date": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -1485,35 +1595,6 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "integer"
-                }
-            }
-        },
-        "responses.ActivityCreateRequest": {
-            "type": "object",
-            "properties": {
-                "activity_image": {
-                    "type": "string",
-                    "example": "https://example.com/image.jpg"
-                },
-                "creator_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "date": {
-                    "type": "string",
-                    "example": "2025-12-31"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "A competitive programming contest"
-                },
-                "group_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Algorithm Contest"
                 }
             }
         },
@@ -1667,16 +1748,31 @@ const docTemplate = `{
                 }
             }
         },
+        "responses.GroupActivitiesResponse": {
+            "type": "object",
+            "properties": {
+                "activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/activity.Activity"
+                    }
+                },
+                "activity_count": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "group_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "responses.GroupCreateRequest": {
             "type": "object",
             "properties": {
                 "description": {
                     "type": "string",
                     "example": "A group for studying algorithms"
-                },
-                "end_date": {
-                    "type": "string",
-                    "example": "2025-12-31"
                 },
                 "group_image": {
                     "type": "string",
@@ -1722,10 +1818,6 @@ const docTemplate = `{
                 "description": {
                     "type": "string",
                     "example": "Updated description"
-                },
-                "end_date": {
-                    "type": "string",
-                    "example": "2025-12-31"
                 },
                 "group_image": {
                     "type": "string",

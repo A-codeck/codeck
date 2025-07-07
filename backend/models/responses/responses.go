@@ -33,13 +33,11 @@ type LoginResponse struct {
 
 type GroupCreateRequest struct {
 	Name        string  `json:"name" example:"Study Group"`
-	EndDate     string  `json:"end_date" example:"2025-12-31"`
 	GroupImage  *string `json:"group_image,omitempty" example:"https://example.com/image.jpg"`
 	Description *string `json:"description,omitempty" example:"A group for studying algorithms"`
 }
 
 type GroupUpdateRequest struct {
-	EndDate     *string `json:"end_date,omitempty" example:"2025-12-31"`
 	GroupImage  *string `json:"group_image,omitempty" example:"https://example.com/image.jpg"`
 	Description *string `json:"description,omitempty" example:"Updated description"`
 }

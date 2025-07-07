@@ -33,8 +33,6 @@ export interface Group {
   name: string;
   description: string;
   group_image?: string;
-  start_date?: string;
-  end_date: string;
   creator_id: string;
 }
 
@@ -92,7 +90,6 @@ export interface GroupCreateRequest {
   name: string;
   description: string;
   group_image?: string;
-  end_date: string;
   creator_id: string; // Required by backend
 }
 
