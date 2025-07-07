@@ -70,9 +70,9 @@ type GroupMembersResponse struct {
 }
 
 type GroupActivitiesResponse struct {
-	GroupID        int                `json:"group_id" example:"1"`
-	Activities     []activity.Activity `json:"activities"`
-	ActivityCount  int                `json:"activity_count" example:"5"`
+	GroupID       int                 `json:"group_id" example:"1"`
+	Activities    []activity.Activity `json:"activities"`
+	ActivityCount int                 `json:"activity_count" example:"5"`
 }
 
 type CreateInviteRequest struct {
@@ -100,12 +100,12 @@ type DeleteNicknameRequest struct {
 }
 
 type ActivityCreateRequest struct {
-	CreatorID     int     `json:"creator_id" example:"1"`
-	GroupID       int     `json:"group_id" example:"1"`
-	Title         string  `json:"title" example:"Algorithm Contest"`
-	Date          string  `json:"date" example:"2025-12-31"`
-	ActivityImage *string `json:"activity_image,omitempty" example:"https://example.com/image.jpg"`
-	Description   *string `json:"description,omitempty" example:"A competitive programming contest"`
+	CreatorID   int    `json:"creator_id" example:"1"`
+	GroupID     int    `json:"group_id" example:"1"`
+	Title       string `json:"title" example:"Algorithm Contest"`
+	Date        string `json:"date" example:"2025-12-31"`
+	Description string `json:"description,omitempty" example:"A competitive programming contest"`
+	// Note: Image file is handled as multipart form data, not JSON
 }
 
 type ActivityUpdateRequest struct {

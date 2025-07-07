@@ -136,7 +136,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
         {activity.activity_image && (
           <Box
             component="img"
-            src={activity.activity_image}
+            src={activity.activity_image.startsWith('http') ? activity.activity_image : `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}${activity.activity_image}`}
             alt={activity.title}
             sx={{
               width: '100%',

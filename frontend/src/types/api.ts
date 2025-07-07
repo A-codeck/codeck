@@ -70,10 +70,10 @@ export interface UserCreateRequest {
 export interface ActivityCreateRequest {
   title: string;
   description: string;
-  activity_image?: string;
   date: string;
   group_id?: string;
   creator_id: string; // Required by backend
+  image: File; // Now required - File object for upload
 }
 
 export interface GroupCreateRequest {

@@ -28,7 +28,6 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
 
   useEffect(() => {
     loadGroupRanking();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId, user]);
 
   const loadGroupRanking = async () => {

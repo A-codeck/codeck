@@ -4,7 +4,7 @@ export const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#111928',
+      main: '#057A55',
       contrastText: '#ffffff',
     },
     secondary: {
@@ -13,13 +13,13 @@ export const theme = createTheme({
     },
     background: {
       default: '#111928',
-      paper: '#1a202c',
+      paper: '#111928',
     },
     text: {
       primary: '#ffffff',
       secondary: '#a0a0a0',
     },
-    divider: '#374151',
+    divider: '#4B5563',
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -44,12 +44,14 @@ export const theme = createTheme({
   },
   components: {
     MuiPaper: {
+      defaultProps: {
+        elevation: 0,
+      },
       styleOverrides: {
         root: {
-          border: '1px solid #374151',
-          borderRadius: '8px',
+          border: '1px solid #4B5563',
           boxShadow: 'none',
-          backgroundColor: '#1a202c',
+          backgroundColor: '#111928',
         },
       },
     },
@@ -91,7 +93,7 @@ export const theme = createTheme({
           border: '1px solid #374151',
           borderRadius: '8px',
           boxShadow: 'none',
-          backgroundColor: '#1a202c',
+          backgroundColor: '#111928',
         },
       },
     },
@@ -101,7 +103,7 @@ export const theme = createTheme({
           border: '1px solid #374151',
           borderRadius: '8px',
           boxShadow: 'none',
-          backgroundColor: '#1a202c',
+          backgroundColor: '#111928',
         },
       },
     },

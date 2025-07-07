@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"backend/controllers"
+	"backend/utils"
 
 	"backend/models/activity"
 	"backend/models/comment"
@@ -38,7 +39,15 @@ import (
 )
 
 func main() {
+	// Initialize upload directory
+	if err := utils.InitUploadDir(); err != nil {
+		log.Fatalf("Failed to initialize upload directory: %v", err)
+	}
+
 	r := mux.NewRouter()
+
+	// Add static file serving for uploaded images
+	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads/"))))
 
 	// Add Swagger endpoint
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
