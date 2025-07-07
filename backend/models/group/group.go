@@ -16,7 +16,7 @@ type Group struct {
 	Description *string        `gorm:"type:text" json:"description,omitempty"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-" swaggerignore:"true"`
 }
 
 type GroupMember struct {
@@ -32,5 +32,5 @@ type GroupInvite struct {
 	CreatedAt  time.Time      `json:"created_at"`
 	ExpiresAt  *time.Time     `json:"expires_at,omitempty"`
 	IsActive   bool           `gorm:"default:true" json:"is_active"`
-	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
+	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-" swaggerignore:"true"`
 }
