@@ -18,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 import GroupsSidebar, { GroupsSidebarRef } from './GroupsSidebar';
 import ActivityFeed from './ActivityFeed';
 import GroupRanking from './GroupRanking';
+import UserDashboard from './UserDashboard';
 
 const HomePage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -163,9 +164,11 @@ const HomePage: React.FC = () => {
               {/* Center - Activity Feed */}
               <ActivityFeed selectedGroupId={selectedGroupId} />
 
-              {/* Right Sidebar - Group Ranking (only show when group is selected) */}
-              {selectedGroupId && (
+              {/* Right Sidebar - Conditional based on group selection */}
+              {selectedGroupId ? (
                 <GroupRanking groupId={selectedGroupId} />
+              ) : (
+                <UserDashboard />
               )}
             </>
           ) : (
