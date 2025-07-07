@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import {
   Box,
   Paper,
@@ -24,13 +24,19 @@ interface GroupsSidebarProps {
   selectedGroupId?: string;
   onGroupSelect: (groupId: string | undefined) => void;
   onGroupsChange: () => void;
+  onGroupsLoaded?: (groups: Group[]) => void; // New callback to pass groups data
 }
 
-const GroupsSidebar: React.FC<GroupsSidebarProps> = ({
+export interface GroupsSidebarRef {
+  openCreateDialog: () => void;
+}
+
+const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
   selectedGroupId,
   onGroupSelect,
   onGroupsChange,
-}) => {
+  onGroupsLoaded,
+}, ref) => {
   const { user } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +47,11 @@ const GroupsSidebar: React.FC<GroupsSidebarProps> = ({
     end_date: '',
     creator_id: '',
   });
+
+  // Expose functions to parent component
+  useImperativeHandle(ref, () => ({
+    openCreateDialog: () => setCreateDialogOpen(true),
+  }));
 
   // Load user's groups using the new API endpoint
   useEffect(() => {
@@ -55,8 +66,16 @@ const GroupsSidebar: React.FC<GroupsSidebarProps> = ({
       setLoading(true);
       const userGroups = await apiService.getUserGroups(user.id);
       setGroups(userGroups);
+      // Call the callback to pass groups data to parent
+      if (onGroupsLoaded) {
+        onGroupsLoaded(userGroups);
+      }
     } catch (error) {
       console.error('Error loading groups:', error);
+      // Even if there's an error, we should call the callback with empty array
+      if (onGroupsLoaded) {
+        onGroupsLoaded([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -73,7 +92,12 @@ const GroupsSidebar: React.FC<GroupsSidebarProps> = ({
       };
       
       const newGroup = await apiService.createGroup(groupDataWithCreator);
-      setGroups([...groups, newGroup]);
+      const updatedGroups = [...groups, newGroup];
+      setGroups(updatedGroups);
+      // Call the callback to pass updated groups data to parent
+      if (onGroupsLoaded) {
+        onGroupsLoaded(updatedGroups);
+      }
       setCreateDialogOpen(false);
       setNewGroupData({
         name: '',
@@ -229,6 +253,8 @@ const GroupsSidebar: React.FC<GroupsSidebarProps> = ({
       </Dialog>
     </Paper>
   );
-};
+});
+
+GroupsSidebar.displayName = 'GroupsSidebar';
 
 export default GroupsSidebar;

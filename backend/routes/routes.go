@@ -26,6 +26,7 @@ func RegisterGroupRoutes(r *mux.Router, groupController *controllers.GroupContro
 func RegisterActivityRoutes(r *mux.Router, activityController *controllers.ActivityController) {
 	r.HandleFunc("/activities", activityController.CreateActivity).Methods("POST")
 	r.HandleFunc("/activities/feed", activityController.GetUserFeed).Methods("GET")
+	r.HandleFunc("/activities/feed-with-groups", activityController.GetUserFeedWithGroups).Methods("GET")
 	r.HandleFunc("/activities/{id}", activityController.GetActivity).Methods("GET")
 	r.HandleFunc("/activities/{id}", activityController.UpdateActivity).Methods("PUT")
 	r.HandleFunc("/activities/{id}", activityController.DeleteActivity).Methods("DELETE")

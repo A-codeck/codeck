@@ -2,6 +2,7 @@ import axios from 'axios';
 import type {
   User,
   Activity,
+  ActivityWithGroups,
   Group,
   Comment,
   LoginRequest,
@@ -80,11 +81,8 @@ class ApiService {
     formData.append('creator_id', activityData.creator_id);
     formData.append('image', activityData.image);
     
-    if (activityData.group_id) {
-      formData.append('group_id', activityData.group_id);
-    } else {
-      formData.append('group_id', '0');
-    }
+    // Join group IDs with comma
+    formData.append('group_ids', activityData.group_ids.join(','));
 
     // Don't set Content-Type header - let the browser set it automatically with boundary
     const response = await this.api.post<Activity>('/activities', formData);
@@ -93,6 +91,11 @@ class ApiService {
 
   async getUserFeed(userId: string): Promise<Activity[]> {
     const response = await this.api.get<Activity[]>(`/activities/feed?user_id=${userId}`);
+    return response.data;
+  }
+
+  async getUserFeedWithGroups(userId: string): Promise<ActivityWithGroups[]> {
+    const response = await this.api.get<ActivityWithGroups[]>(`/activities/feed-with-groups?user_id=${userId}`);
     return response.data;
   }
 

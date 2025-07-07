@@ -8,11 +8,15 @@ import {
   Button,
   Box,
   Typography,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
+  OutlinedInput,
+  MenuItem,
+  ListItemText,
+  Checkbox,
+  Chip,
 } from '@mui/material';
+import { Select, SelectChangeEvent } from '@mui/material';
 import { ActivityCreateRequest, Group } from '../types/api';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
@@ -33,7 +37,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
     title: '',
     description: '',
     date: new Date().toISOString().split('T')[0], // Today's date
-    group_id: '',
+    group_ids: [], // Now an array
     creator_id: user?.id || '', // Include creator_id from auth context
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -102,13 +106,11 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
     }
   };
 
-  const handleSelectChange = (e: any) => {
-    const name = e.target.name as keyof Omit<ActivityCreateRequest, 'image'>;
-    const value = e.target.value as string;
-    
+  const handleSelectChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
     setFormData({
       ...formData,
-      [name]: value,
+      group_ids: typeof value === 'string' ? value.split(',') : value,
     });
   };
 
@@ -131,7 +133,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
         title: '',
         description: '',
         date: new Date().toISOString().split('T')[0],
-        group_id: '',
+        group_ids: [], // Reset to empty array
         creator_id: user.id, // Reset creator_id to current user
       });
       setSelectedImage(null);
@@ -164,7 +166,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
           Log Your Activity
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Share what you've accomplished today
+          Share what you've accomplished today. You must select at least one group to share your activity with.
         </Typography>
       </DialogTitle>
       
@@ -241,23 +243,49 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
             }}
           />
           
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Group (Optional)</InputLabel>
+          <FormControl fullWidth sx={{ mb: 2 }} required error={formData.group_ids.length === 0}>
+            <InputLabel>Groups *</InputLabel>
             <Select
-              name="group_id"
-              value={formData.group_id || ''}
+              multiple
+              value={formData.group_ids}
               onChange={handleSelectChange}
-              label="Group (Optional)"
+              input={<OutlinedInput label="Groups *" />}
+              disabled={groups.length === 0}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => {
+                    const group = groups.find(g => g.id === value);
+                    return (
+                      <Chip key={value} label={group?.name || value} size="small" />
+                    );
+                  })}
+                </Box>
+              )}
             >
-              <MenuItem value="">
-                <em>No Group (Personal Activity)</em>
-              </MenuItem>
-              {groups.map((group) => (
-                <MenuItem key={group.id} value={group.id}>
-                  {group.name}
+              {groups.length === 0 ? (
+                <MenuItem disabled>
+                  <Typography color="text.secondary">
+                    No groups available. Please create or join a group first.
+                  </Typography>
                 </MenuItem>
-              ))}
+              ) : (
+                groups.map((group) => (
+                  <MenuItem key={group.id} value={group.id}>
+                    <Checkbox checked={formData.group_ids.indexOf(group.id) > -1} />
+                    <ListItemText primary={group.name} />
+                  </MenuItem>
+                ))
+              )}
             </Select>
+            {groups.length === 0 ? (
+              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                You need to be part of at least one group to post activities
+              </Typography>
+            ) : formData.group_ids.length === 0 ? (
+              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                Please select at least one group
+              </Typography>
+            ) : null}
           </FormControl>
         </Box>
       </DialogContent>
@@ -270,7 +298,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
           onClick={handleSubmit}
           variant="contained"
           color="secondary"
-          disabled={loading || !formData.title || !formData.date || !selectedImage}
+          disabled={loading || !formData.title || !formData.date || !selectedImage || formData.group_ids.length === 0 || groups.length === 0}
         >
           {loading ? 'Posting...' : 'Post Activity'}
         </Button>

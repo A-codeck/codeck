@@ -69,6 +69,7 @@ func setupTestDB() error {
 		&group.GroupMember{},
 		&group.GroupInvite{},
 		&activity.Activity{},
+		&activity.ActivityGroup{},
 		&comment.Comment{},
 		&user.User{},
 	)
@@ -88,6 +89,7 @@ func cleanTestDB() error {
 	// Delete all records in reverse order to respect foreign key constraints
 	tables := []interface{}{
 		&comment.Comment{},
+		&activity.ActivityGroup{},
 		&activity.Activity{},
 		&group.GroupInvite{},
 		&group.GroupMember{},
@@ -106,6 +108,7 @@ func cleanTestDB() error {
 		"ALTER SEQUENCE users_id_seq RESTART WITH 1",
 		"ALTER SEQUENCE groups_id_seq RESTART WITH 1",
 		"ALTER SEQUENCE activities_id_seq RESTART WITH 1",
+		"ALTER SEQUENCE activity_groups_id_seq RESTART WITH 1",
 		"ALTER SEQUENCE comments_id_seq RESTART WITH 1",
 	}
 
