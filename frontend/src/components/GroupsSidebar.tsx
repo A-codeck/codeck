@@ -14,9 +14,15 @@ import {
   DialogActions,
   TextField,
   Avatar,
+  Divider,
+  Chip,
 } from '@mui/material';
-import { Add as AddIcon, Group as GroupIcon } from '@mui/icons-material';
-import { Group, GroupCreateRequest } from '../types/api';
+import { 
+  Add as AddIcon, 
+  Group as GroupIcon, 
+  Home as HomeIcon 
+} from '@mui/icons-material';
+import { Group, GroupCreateRequest, UserStats } from '../types/api';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 
@@ -39,6 +45,7 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
 }, ref) => {
   const { user } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
+  const [groupRankings, setGroupRankings] = useState<{ [groupId: string]: UserStats[] }>({});
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newGroupData, setNewGroupData] = useState<GroupCreateRequest>({
@@ -66,6 +73,10 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
       setLoading(true);
       const userGroups = await apiService.getUserGroups(user.id);
       setGroups(userGroups);
+      
+      // Load rankings for each group
+      await loadGroupRankings(userGroups);
+      
       // Call the callback to pass groups data to parent
       if (onGroupsLoaded) {
         onGroupsLoaded(userGroups);
@@ -81,6 +92,51 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
     }
   };
 
+  const loadGroupRankings = async (groupList: Group[]) => {
+    if (!user) return;
+
+    const rankings: { [groupId: string]: UserStats[] } = {};
+
+    for (const group of groupList) {
+      try {
+        // Load group members
+        const membersData = await apiService.getGroupMembers(group.id, user.id);
+        
+        // Calculate rankings by getting activities for each member
+        const userStats: UserStats[] = [];
+        
+        for (const member of membersData.members) {
+          try {
+            // Get user info
+            const userData = await apiService.getUser(member.user_id);
+            
+            // Get user's activities in this group
+            const groupActivities = await apiService.getGroupActivities(group.id, user.id);
+            const userActivities = groupActivities.filter(activity => activity.creator_id === member.user_id);
+            
+            userStats.push({
+              user_id: member.user_id,
+              user_name: userData.name,
+              activity_count: userActivities.length,
+            });
+          } catch (error) {
+            console.error(`Error loading data for user ${member.user_id}:`, error);
+          }
+        }
+        
+        // Sort by activity count (descending) and take top 3
+        userStats.sort((a, b) => b.activity_count - a.activity_count);
+        rankings[group.id] = userStats.slice(0, 3);
+        
+      } catch (error) {
+        console.error(`Error loading ranking for group ${group.id}:`, error);
+        rankings[group.id] = [];
+      }
+    }
+    
+    setGroupRankings(rankings);
+  };
+
   const handleCreateGroup = async () => {
     if (!user) return;
 
@@ -94,6 +150,10 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
       const newGroup = await apiService.createGroup(groupDataWithCreator);
       const updatedGroups = [...groups, newGroup];
       setGroups(updatedGroups);
+      
+      // Load rankings for the updated groups list
+      await loadGroupRankings(updatedGroups);
+      
       // Call the callback to pass updated groups data to parent
       if (onGroupsLoaded) {
         onGroupsLoaded(updatedGroups);
@@ -118,6 +178,15 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
     });
   };
 
+  const getMedalEmoji = (position: number) => {
+    switch (position) {
+      case 0: return '🥇';
+      case 1: return '🥈';
+      case 2: return '🥉';
+      default: return '';
+    }
+  };
+
   return (
     <Paper
       sx={{
@@ -130,70 +199,114 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
         borderRadius: 0,
       }}
     >
-      <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h3" gutterBottom>
+      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        {/* Home Section */}
+        <ListItem disablePadding sx={{ mb: 1 }}>
+          <ListItemButton
+            selected={!selectedGroupId}
+            onClick={() => onGroupSelect(undefined)}
+            sx={{ borderRadius: 1 }}
+          >
+            <Avatar sx={{ mr: 2, width: 32, height: 32, bgcolor: 'primary.main' }}>
+              <HomeIcon />
+            </Avatar>
+            <ListItemText 
+              primary="Home" 
+              secondary="See all activities"
+              primaryTypographyProps={{
+                variant: 'body2',
+                fontWeight: 'medium',
+              }}
+              secondaryTypographyProps={{
+                variant: 'caption',
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Groups Section */}
+        <Typography variant="caption" color="text.secondary" sx={{ px: 1, mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 1 }}>
           Groups
         </Typography>
+
+        {groups.map((group, groupIndex) => (
+          <Box key={group.id}>
+            <ListItem disablePadding sx={{ mb: 1 }}>
+              <ListItemButton
+                selected={selectedGroupId === group.id}
+                onClick={() => onGroupSelect(group.id)}
+                sx={{ borderRadius: 1, flexDirection: 'column', alignItems: 'flex-start', py: 1.5 }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1 }}>
+                  <Avatar sx={{ mr: 2, width: 32, height: 32, bgcolor: 'secondary.main' }}>
+                    <GroupIcon />
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2" fontWeight="medium" noWrap>
+                      {group.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      {group.description}
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                {/* Top 3 Users */}
+                {groupRankings[group.id] && groupRankings[group.id].length > 0 && (
+                  <Box sx={{ width: '100%', pl: 5 }}>
+                    {groupRankings[group.id].map((userStat, index) => (
+                      <Box key={userStat.user_id} sx={{ display: 'flex', alignItems: 'center', py: 0.25 }}>
+                        <Typography variant="caption" sx={{ mr: 0.5 }}>
+                          {getMedalEmoji(index)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1 }}>
+                          {userStat.user_name}
+                        </Typography>
+                        <Chip 
+                          label={userStat.activity_count} 
+                          size="small" 
+                          sx={{ 
+                            height: 16, 
+                            fontSize: '0.625rem',
+                            '& .MuiChip-label': { px: 0.75 }
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </ListItemButton>
+            </ListItem>
+            {groupIndex < groups.length - 1 && <Divider sx={{ my: 1 }} />}
+          </Box>
+        ))}
+
+        {groups.length === 0 && !loading && (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              No groups yet
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Create your first group to get started
+            </Typography>
+          </Box>
+        )}
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Add Group Button */}
         <Button
-          variant="contained"
+          variant="outlined"
           color="secondary"
           startIcon={<AddIcon />}
           fullWidth
           onClick={() => setCreateDialogOpen(true)}
+          sx={{ borderRadius: 1 }}
         >
-          New Group
+          Add Group
         </Button>
-      </Box>
-
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <List>
-          <ListItem disablePadding>
-            <ListItemButton
-              selected={!selectedGroupId}
-              onClick={() => onGroupSelect(undefined)}
-            >
-              <ListItemText 
-                primary="All Groups" 
-                secondary="See all activities"
-              />
-            </ListItemButton>
-          </ListItem>
-
-          {groups.map((group) => (
-            <ListItem key={group.id} disablePadding>
-              <ListItemButton
-                selected={selectedGroupId === group.id}
-                onClick={() => onGroupSelect(group.id)}
-              >
-                <Avatar sx={{ mr: 2, width: 32, height: 32 }}>
-                  <GroupIcon />
-                </Avatar>
-                <ListItemText
-                  primary={group.name}
-                  secondary={group.description}
-                  primaryTypographyProps={{
-                    variant: 'body2',
-                    noWrap: true,
-                  }}
-                  secondaryTypographyProps={{
-                    variant: 'caption',
-                    noWrap: true,
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-
-          {groups.length === 0 && !loading && (
-            <ListItem>
-              <ListItemText
-                primary="No groups yet"
-                secondary="Create your first group to get started"
-                sx={{ textAlign: 'center' }}
-              />
-            </ListItem>
-          )}
-        </List>
       </Box>
 
       {/* Create Group Dialog */}
