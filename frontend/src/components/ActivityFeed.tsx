@@ -96,7 +96,13 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
   }
 
   return (
-    <Box sx={{ flex: 1, p: 3 }}>
+    <Box 
+      sx={{ 
+        flex: 1, 
+        overflow: 'auto',
+        p: 3
+      }}
+    >
       {/* Header */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

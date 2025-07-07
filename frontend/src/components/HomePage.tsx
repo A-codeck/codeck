@@ -18,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 import GroupsSidebar, { GroupsSidebarRef } from './GroupsSidebar';
 import ActivityFeed from './ActivityFeed';
 import GroupRanking from './GroupRanking';
+import UserDashboard from './UserDashboard';
 
 const HomePage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -100,9 +101,28 @@ const HomePage: React.FC = () => {
       {/* Header */}
       <AppBar position="static" elevation={0} sx={{ backgroundColor: (theme) => theme.palette.background.default }}>
         <Toolbar>
-          <Typography variant="h2" component="div" sx={{ flexGrow: 1 }}>
-        CODECK
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+            {/* Logo Placeholder */}
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 2,
+                background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '1.2rem',
+              }}
+            >
+              C
+            </Box>
+            <Typography variant="h2" component="div">
+              CODECK
+            </Typography>
+          </Box>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Typography variant="body1">
@@ -163,9 +183,11 @@ const HomePage: React.FC = () => {
               {/* Center - Activity Feed */}
               <ActivityFeed selectedGroupId={selectedGroupId} />
 
-              {/* Right Sidebar - Group Ranking (only show when group is selected) */}
-              {selectedGroupId && (
+              {/* Right Sidebar - Conditional based on group selection */}
+              {selectedGroupId ? (
                 <GroupRanking groupId={selectedGroupId} />
+              ) : (
+                <UserDashboard />
               )}
             </>
           ) : (
