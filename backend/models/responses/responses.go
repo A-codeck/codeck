@@ -33,7 +33,7 @@ type LoginResponse struct {
 
 type GroupCreateRequest struct {
 	Name        string  `json:"name" example:"Study Group"`
-	GroupImage  *string `json:"group_image,omitempty" example:"https://example.com/image.jpg"`
+	GroupImage  *string `json:"group_image,omitempty" example:"https://example.com/image.jpg"` // Optional
 	Description *string `json:"description,omitempty" example:"A group for studying algorithms"`
 }
 

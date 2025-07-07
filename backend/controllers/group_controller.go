@@ -10,6 +10,7 @@ import (
 	"backend/models/group"
 	"backend/models/responses"
 	"backend/models/user"
+	"backend/utils"
 
 	"github.com/gorilla/mux"
 )
@@ -80,54 +81,86 @@ func (gc *GroupController) GetGroup(w http.ResponseWriter, r *http.Request) {
 
 // CreateGroup godoc
 // @Summary Create a new group
-// @Description Create a new group with name and optional image/description
+// @Description Create a new group with name, optional image, and optional description
 // @Tags groups
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
-// @Param group body responses.GroupCreateRequest true "Group creation data"
+// @Param name formData string true "Group name"
+// @Param creator_id formData int true "Creator ID"
+// @Param description formData string false "Group description"
+// @Param image formData file false "Group image (optional)"
 // @Success 201 {object} group.Group
 // @Failure 400 {object} responses.ErrorResponse
 // @Router /groups [post]
 func (gc *GroupController) CreateGroup(w http.ResponseWriter, r *http.Request) {
-	var raw map[string]interface{}
-	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
-		log.Printf("Failed to decode request payload: %v", err)
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	// Parse multipart form
+	err := r.ParseMultipartForm(10 << 20) // 10MB max
+	if err != nil {
+		log.Printf("Failed to parse multipart form: %v", err)
+		http.Error(w, "Invalid multipart form data", http.StatusBadRequest)
 		return
 	}
-	creatorID, ok := raw["creator_id"].(float64)
-	if !ok || int(creatorID) == 0 {
-		log.Println("Missing or invalid creator_id in group creation")
-		http.Error(w, "Missing or invalid creator_id", http.StatusBadRequest)
+
+	// Extract form values
+	name := r.FormValue("name")
+	creatorIDStr := r.FormValue("creator_id")
+	description := r.FormValue("description")
+
+	if name == "" || creatorIDStr == "" {
+		log.Println("Missing required fields: name or creator_id")
+		http.Error(w, "Missing required fields: name and creator_id", http.StatusBadRequest)
 		return
 	}
+
+	creatorID, err := strconv.Atoi(creatorIDStr)
+	if err != nil {
+		log.Printf("Invalid creator_id: %v", err)
+		http.Error(w, "Invalid creator_id", http.StatusBadRequest)
+		return
+	}
+
 	// Check if user exists
-	if _, exists := gc.UserModel.GetUserByID(int(creatorID)); !exists {
-		log.Printf("User with id %d does not exist", int(creatorID))
+	if _, exists := gc.UserModel.GetUserByID(creatorID); !exists {
+		log.Printf("User with id %d does not exist", creatorID)
 		http.Error(w, "Creator user does not exist", http.StatusBadRequest)
 		return
 	}
-	fixed, _ := json.Marshal(raw)
-	var group group.Group
-	if err := json.Unmarshal(fixed, &group); err != nil {
-		log.Printf("Failed to decode request payload: %v", err)
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
-	// Set the creator_id explicitly
-	group.CreatorID = int(creatorID)
 
-	if group.Name == "" {
-		log.Println("Missing required fields in group creation")
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
-		return
+	// Create group object
+	newGroup := group.Group{
+		Name:      name,
+		CreatorID: creatorID,
 	}
 
-	createdGroup := gc.Model.CreateGroup(group)
+	// Handle optional image upload
+	file, header, err := r.FormFile("image")
+	if err == nil {
+		// Image was provided, save it
+		defer file.Close()
+		uploadResult, err := utils.SaveGroupImage(file, header)
+		if err != nil {
+			log.Printf("Failed to save group image: %v", err)
+			http.Error(w, "Failed to save group image: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		newGroup.GroupImage = &uploadResult.URL
+	} else {
+		// No image provided, leave GroupImage as nil
+		log.Printf("No image file provided: %v", err)
+	}
+
+	// Set description if provided
+	if description != "" {
+		newGroup.Description = &description
+	}
+
+	createdGroup := gc.Model.CreateGroup(newGroup)
+
 	// Add the creator as a member of the group
 	if createdGroup.CreatorID != 0 && createdGroup.ID != 0 {
 		gc.Model.AddUserToGroup(createdGroup.ID, createdGroup.CreatorID)
 	}
+
 	log.Printf("Group created with ID: %d", createdGroup.ID)
 
 	w.WriteHeader(http.StatusCreated)

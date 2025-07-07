@@ -40,7 +40,7 @@ import (
 
 func main() {
 	// Initialize upload directory
-	if err := utils.InitUploadDir(); err != nil {
+	if err := utils.InitUploadDirs(); err != nil {
 		log.Fatalf("Failed to initialize upload directory: %v", err)
 	}
 

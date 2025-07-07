@@ -117,7 +117,17 @@ class ApiService {
 
   // Group endpoints
   async createGroup(groupData: GroupCreateRequest): Promise<Group> {
-    const response = await this.api.post<Group>('/groups', groupData);
+    const formData = new FormData();
+    formData.append('name', groupData.name);
+    formData.append('description', groupData.description);
+    formData.append('creator_id', groupData.creator_id);
+    
+    // Only append image if it's provided
+    if (groupData.image) {
+      formData.append('image', groupData.image);
+    }
+
+    const response = await this.api.post<Group>('/groups', formData);
     return response.data;
   }
 
