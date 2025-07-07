@@ -36,7 +36,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
   const [formData, setFormData] = useState<Omit<ActivityCreateRequest, 'image'>>({
     title: '',
     description: '',
-    date: new Date().toISOString().split('T')[0], // Today's date
+    date: new Date().toISOString().split('T')[0], // Always current date
     group_ids: [], // Now an array
     creator_id: user?.id || '', // Include creator_id from auth context
   });
@@ -71,6 +71,9 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name as keyof Omit<ActivityCreateRequest, 'image'>;
     const value = e.target.value as string;
+    
+    // Skip date field as it's automatically set to current date
+    if (name === 'date') return;
     
     setFormData({
       ...formData,
@@ -123,6 +126,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
       
       const activityData: ActivityCreateRequest = {
         ...formData,
+        date: new Date().toISOString().split('T')[0], // Always use current date when posting
         image: selectedImage,
       };
       
@@ -132,7 +136,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
       setFormData({
         title: '',
         description: '',
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString().split('T')[0], // Always current date
         group_ids: [], // Reset to empty array
         creator_id: user.id, // Reset creator_id to current user
       });
@@ -165,8 +169,16 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
         <Typography variant="h2">
           Log Your Activity
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Share what you've accomplished today. You must select at least one group to share your activity with.
+        </Typography>
+        <Typography variant="body2" color="primary" sx={{ fontWeight: 'medium' }}>
+          📅 Will be posted on: {new Date().toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
         </Typography>
       </DialogTitle>
       
@@ -230,19 +242,6 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
             )}
           </Box>
           
-          <TextField
-            fullWidth
-            name="date"
-            label="Date"
-            type="date"
-            value={formData.date}
-            onChange={handleInputChange}
-            required
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-          
           <FormControl fullWidth sx={{ mb: 2 }} required error={formData.group_ids.length === 0}>
             <InputLabel>Groups *</InputLabel>
             <Select
@@ -298,7 +297,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
           onClick={handleSubmit}
           variant="contained"
           color="secondary"
-          disabled={loading || !formData.title || !formData.date || !selectedImage || formData.group_ids.length === 0 || groups.length === 0}
+          disabled={loading || !formData.title || !selectedImage || formData.group_ids.length === 0 || groups.length === 0}
         >
           {loading ? 'Posting...' : 'Post Activity'}
         </Button>
