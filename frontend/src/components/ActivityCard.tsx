@@ -22,12 +22,12 @@ import {
   Comment as CommentIcon,
   Send as SendIcon,
 } from '@mui/icons-material';
-import { ActivityWithGroup, Comment, User } from '../types/api';
+import { ActivityWithGroup, ActivityWithGroups, Comment, User } from '../types/api';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 
 interface ActivityCardProps {
-  activity: ActivityWithGroup;
+  activity: ActivityWithGroup | ActivityWithGroups;
   showGroupTag?: boolean;
 }
 
@@ -114,13 +114,31 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
               {formatDate(activity.date)}
             </Typography>
           </Box>
-          {showGroupTag && activity.group && (
-            <Chip
-              label={activity.group.name}
-              size="small"
-              variant="outlined"
-              color="secondary"
-            />
+          {showGroupTag && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {'group_names' in activity && activity.group_names ? (
+                // New format with multiple group names
+                activity.group_names.map((groupName, index) => (
+                  <Chip
+                    key={index}
+                    label={groupName}
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                  />
+                ))
+              ) : (
+                // Legacy format with single group
+                'group' in activity && activity.group && (
+                  <Chip
+                    label={activity.group.name}
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                  />
+                )
+              )}
+            </Box>
           )}
         </Box>
 

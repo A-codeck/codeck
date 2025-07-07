@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"backend/models/activity"
 	"backend/models/group"
@@ -60,15 +61,15 @@ func (ac *ActivityController) GetActivity(w http.ResponseWriter, r *http.Request
 }
 
 // CreateActivity godoc
-// @Summary Create a new activity with image upload
-// @Description Create a new activity with mandatory image upload, title, and date
+// @Summary Create a new activity with image upload and mandatory group selection
+// @Description Create a new activity with mandatory image upload, title, date, and at least one group
 // @Tags activities
 // @Accept multipart/form-data
 // @Produce json
 // @Param title formData string true "Activity Title"
 // @Param description formData string false "Activity Description"
 // @Param date formData string true "Activity Date (YYYY-MM-DD)"
-// @Param group_id formData int false "Group ID (0 for personal activity)"
+// @Param group_ids formData string true "Comma-separated Group IDs (at least one required)"
 // @Param creator_id formData int true "Creator ID"
 // @Param image formData file true "Activity Image"
 // @Success 201 {object} activity.Activity
@@ -87,13 +88,13 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 	title := r.FormValue("title")
 	description := r.FormValue("description")
 	date := r.FormValue("date")
-	groupIDStr := r.FormValue("group_id")
+	groupIDsStr := r.FormValue("group_ids")
 	creatorIDStr := r.FormValue("creator_id")
 
 	// Validate required fields
-	if title == "" || date == "" || creatorIDStr == "" {
+	if title == "" || date == "" || creatorIDStr == "" || groupIDsStr == "" {
 		log.Println("Missing required fields in activity creation")
-		http.Error(w, "Missing required fields: title, date, and creator_id are required", http.StatusBadRequest)
+		http.Error(w, "Missing required fields: title, date, creator_id, and group_ids are required", http.StatusBadRequest)
 		return
 	}
 
@@ -105,15 +106,27 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Parse group_id (default to 0 for personal activity)
-	groupID := 0
-	if groupIDStr != "" {
-		groupID, err = strconv.Atoi(groupIDStr)
+	// Parse group_ids (comma-separated)
+	groupIDStrs := strings.Split(groupIDsStr, ",")
+	var groupIDs []int
+	for _, idStr := range groupIDStrs {
+		if strings.TrimSpace(idStr) == "" {
+			continue
+		}
+		groupID, err := strconv.Atoi(strings.TrimSpace(idStr))
 		if err != nil {
 			log.Printf("Invalid group_id: %v", err)
-			http.Error(w, "Invalid group_id", http.StatusBadRequest)
+			http.Error(w, "Invalid group_id format", http.StatusBadRequest)
 			return
 		}
+		groupIDs = append(groupIDs, groupID)
+	}
+
+	// Validate at least one group is provided
+	if len(groupIDs) == 0 {
+		log.Println("No groups provided for activity")
+		http.Error(w, "At least one group is required", http.StatusBadRequest)
+		return
 	}
 
 	// Get uploaded image file
@@ -144,7 +157,6 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 		"description":    description,
 		"activity_image": uploadResult.URL,
 		"date":           date,
-		"group_id":       groupID,
 		"creator_id":     creatorID,
 	}
 
@@ -159,20 +171,20 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Validate group if specified
-	if activityObj.GroupID != 0 {
-		_, groupExists := ac.GroupModel.GetGroupByID(activityObj.GroupID)
+	// Validate all groups exist
+	for _, groupID := range groupIDs {
+		_, groupExists := ac.GroupModel.GetGroupByID(groupID)
 		if !groupExists {
-			log.Printf("Group not found: id=%d", activityObj.GroupID)
+			log.Printf("Group not found: id=%d", groupID)
 			// Clean up uploaded file on error
 			utils.DeleteImage(uploadResult.Filename)
-			http.Error(w, "Group not found", http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("Group not found: %d", groupID), http.StatusNotFound)
 			return
 		}
 	}
 
-	// Create activity in database
-	createdActivity := ac.Model.CreateActivity(activityObj)
+	// Create activity with groups in database
+	createdActivity := ac.Model.CreateActivityWithGroups(activityObj, groupIDs)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(createdActivity)
@@ -332,6 +344,45 @@ func (ac *ActivityController) GetUserFeed(w http.ResponseWriter, r *http.Request
 
 	// Get activities from these groups
 	activities := ac.Model.GetActivitiesByGroupIDs(groupIDs)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(activities)
+}
+
+// GetUserFeedWithGroups godoc
+// @Summary Get user activity feed with group information
+// @Description Get activities from all groups the user is a member of, with group names included
+// @Tags activities
+// @Accept json
+// @Produce json
+// @Param user_id query string true "User ID"
+// @Success 200 {array} activity.ActivityWithGroups
+// @Failure 400 {object} responses.ErrorResponse
+// @Router /activities/feed-with-groups [get]
+func (ac *ActivityController) GetUserFeedWithGroups(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.URL.Query().Get("user_id")
+	if userIDStr == "" {
+		http.Error(w, "Missing user_id parameter", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user_id: %v", err)
+		http.Error(w, "Invalid user_id", http.StatusBadRequest)
+		return
+	}
+
+	// Get all groups the user is a member of
+	userGroups := ac.GroupModel.GetUserGroups(userID)
+
+	var groupIDs []int
+	for _, group := range userGroups {
+		groupIDs = append(groupIDs, group.ID)
+	}
+
+	// Get activities with group information
+	activities := ac.Model.GetActivitiesWithGroupInfo(groupIDs, userID)
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(activities)

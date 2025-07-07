@@ -101,7 +101,7 @@ func TestCreateActivityValid(t *testing.T) {
 	// Prepare form data
 	fields := map[string]string{
 		"creator_id":  "1",
-		"group_id":    "1",
+		"group_ids":   "1",
 		"title":       "New Activity",
 		"date":        "2025-12-31",
 		"description": "Dpzinha legal demais",
@@ -158,10 +158,10 @@ func TestCreatePersonalActivityValid(t *testing.T) {
 	defer os.Remove(imageFile.Name())
 	defer imageFile.Close()
 
-	// Prepare form data for personal activity (group_id = 0)
+	// Prepare form data for personal activity (group_ids = 1)
 	fields := map[string]string{
 		"creator_id":  "1",
-		"group_id":    "0",
+		"group_ids":   "1",
 		"title":       "Personal Activity",
 		"date":        "2025-12-31",
 		"description": "Personal coding session",
@@ -192,8 +192,8 @@ func TestCreatePersonalActivityValid(t *testing.T) {
 		t.Errorf("Failed to parse response: %v", err)
 	}
 
-	if activity.GroupID != 0 {
-		t.Errorf("Expected group_id 0 for personal activity, got %d", activity.GroupID)
+	if len(activity.Groups) == 0 || activity.Groups[0] != 1 {
+		t.Errorf("Expected activity to be in group 1, got groups %v", activity.Groups)
 	}
 
 	// Cleanup uploaded file
@@ -209,7 +209,7 @@ func TestCreateActivityWithoutImage(t *testing.T) {
 	// Prepare form data without image
 	fields := map[string]string{
 		"creator_id":  "1",
-		"group_id":    "1",
+		"group_ids":   "1",
 		"title":       "Activity Without Image",
 		"date":        "2025-12-31",
 		"description": "This should fail",

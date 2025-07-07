@@ -8,7 +8,7 @@ import {
   Alert,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { ActivityWithGroup } from '../types/api';
+import { ActivityWithGroups, ActivityWithGroup } from '../types/api';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import ActivityCard from './ActivityCard';
@@ -20,7 +20,7 @@ interface ActivityFeedProps {
 
 const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
   const { user } = useAuth();
-  const [activities, setActivities] = useState<ActivityWithGroup[]>([]);
+  const [activities, setActivities] = useState<(ActivityWithGroup | ActivityWithGroups)[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -37,16 +37,16 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
       setLoading(true);
       setError('');
       
-      let activitiesData: ActivityWithGroup[] = [];
+      let activitiesData: (ActivityWithGroup | ActivityWithGroups)[] = [];
 
       if (selectedGroupId) {
         // Load activities for specific group
         const groupActivities = await apiService.getGroupActivities(selectedGroupId, user.id);
         activitiesData = groupActivities.map(activity => ({ ...activity }));
       } else {
-        // Load user's feed from all groups
-        const feedActivities = await apiService.getUserFeed(user.id);
-        activitiesData = feedActivities.map(activity => ({ ...activity }));
+        // Load user's feed from all groups with group information
+        const feedActivities = await apiService.getUserFeedWithGroups(user.id);
+        activitiesData = feedActivities;
       }
 
       // Sort by date (newest first)

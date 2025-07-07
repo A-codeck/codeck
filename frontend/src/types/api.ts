@@ -13,6 +13,18 @@ export interface Activity {
   activity_image?: string;
   date: string;
   creator_id: string;
+  group_ids?: string[]; // Now supports multiple groups
+}
+
+// Activity with group information for feed display
+export interface ActivityWithGroups {
+  id: string;
+  title: string;
+  description: string;
+  activity_image?: string;
+  date: string;
+  creator_id: string;
+  group_names?: string[]; // Group names for display
 }
 
 // Group types
@@ -71,7 +83,7 @@ export interface ActivityCreateRequest {
   title: string;
   description: string;
   date: string;
-  group_id?: string;
+  group_ids: string[]; // Now required and supports multiple groups
   creator_id: string; // Required by backend
   image: File; // Now required - File object for upload
 }
@@ -109,6 +121,13 @@ export interface GroupMembersResponse {
 // Extended types for frontend
 export interface ActivityWithGroup extends Activity {
   group?: Group;
+  comments?: Comment[];
+  commentsCount?: number;
+}
+
+// Extended types for activities with group information
+export interface ActivityWithGroupNames extends ActivityWithGroups {
+  group?: Group; // For backward compatibility
   comments?: Comment[];
   commentsCount?: number;
 }
