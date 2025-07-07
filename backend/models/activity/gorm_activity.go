@@ -28,6 +28,18 @@ func (m *GormActivityModel) GetActivitiesByCreatorID(creatorID int) []Activity {
 	return list
 }
 
+func (m *GormActivityModel) GetActivitiesByGroupID(groupID int) []Activity {
+	var list []Activity
+	m.db.Where("group_id = ?", groupID).Find(&list)
+	return list
+}
+
+func (m *GormActivityModel) GetActivitiesByGroupIDs(groupIDs []int) []Activity {
+	var list []Activity
+	m.db.Where("group_id IN ?", groupIDs).Find(&list)
+	return list
+}
+
 func (m *GormActivityModel) CreateActivity(a Activity) Activity {
 	m.db.Create(&a)
 	return a
@@ -58,6 +70,7 @@ func (m *GormActivityModel) SeedDefaultData() {
 	m.CreateActivity(Activity{
 		Title:       "New Activity",
 		CreatorID:   1,
+		GroupID:     1,
 		Date:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		Description: stringPtr("Dpzinha legal demais"),
 	})

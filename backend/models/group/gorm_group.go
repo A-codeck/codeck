@@ -133,6 +133,14 @@ func (m *GormGroupModel) GetGroupActivities(groupID int) ([]string, bool) {
 	return []string{}, true // Placeholder
 }
 
+func (m *GormGroupModel) GetUserGroups(userID int) []Group {
+	var groups []Group
+	m.db.Joins("JOIN group_members ON groups.id = group_members.group_id").
+		Where("group_members.user_id = ?", userID).
+		Find(&groups)
+	return groups
+}
+
 func (m *GormGroupModel) Clear() {
 	m.db.Exec("DELETE FROM groups")
 	m.db.Exec("ALTER SEQUENCE groups_id_seq RESTART WITH 1")
@@ -142,7 +150,6 @@ func (m *GormGroupModel) Clear() {
 
 func (m *GormGroupModel) SeedDefaultData() {
 	m.CreateGroup(Group{
-		ID:          1,
 		CreatorID:   1,
 		Name:        "New Group",
 		StartDate:   time.Now(),
