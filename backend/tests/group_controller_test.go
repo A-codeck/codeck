@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -14,23 +15,55 @@ import (
 func setupGroupTest(t *testing.T) {
 	// Use comprehensive seeding that includes all dependencies
 	SeedAllTestData(t)
+
+	// The upload directories should already exist in the test environment
+	// If not, they'll be created when files are saved
+}
+
+// Helper function to create multipart form data for group creation
+func createGroupFormData(name, description string, creatorID int) (*bytes.Buffer, string) {
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+
+	// Add form fields
+	writer.WriteField("name", name)
+	writer.WriteField("description", description)
+	writer.WriteField("creator_id", strconv.Itoa(creatorID))
+
+	// Add a dummy image file
+	part, _ := writer.CreateFormFile("image", "test.jpg")
+	// Write minimal JPEG header (for testing purposes)
+	part.Write([]byte{0xFF, 0xD8, 0xFF, 0xE0}) // JPEG magic bytes
+
+	writer.Close()
+	return &b, writer.FormDataContentType()
+}
+
+// Helper function to create multipart form data for group creation without image
+func createGroupFormDataWithoutImage(name, description string, creatorID int) (*bytes.Buffer, string) {
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+
+	// Add form fields
+	writer.WriteField("name", name)
+	writer.WriteField("description", description)
+	writer.WriteField("creator_id", strconv.Itoa(creatorID))
+	// Intentionally omit image
+
+	writer.Close()
+	return &b, writer.FormDataContentType()
 }
 
 func TestCreateGroupValid(t *testing.T) {
 	setupGroupTest(t)
-	validGroup := map[string]interface{}{
-		"name":        "newest Group",
-		"group_image": "image_url",
-		"description": "A test group",
-		"creator_id":  1, // Ensure creator_id is present
-	}
 
-	body, _ := json.Marshal(validGroup)
-	req, err := http.NewRequest("POST", "/groups", bytes.NewBuffer(body))
+	body, contentType := createGroupFormData("newest Group", "A test group", 1)
+
+	req, err := http.NewRequest("POST", "/groups", body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", contentType)
 
 	recorder := httptest.NewRecorder()
 	testGroupRouter.ServeHTTP(recorder, req)
@@ -43,6 +76,11 @@ func TestCreateGroupValid(t *testing.T) {
 	var createdGroup group.Group
 	if err := json.NewDecoder(recorder.Body).Decode(&createdGroup); err != nil {
 		t.Fatal("Failed to decode group creation response")
+	}
+
+	// Verify group has an image
+	if createdGroup.GroupImage == nil || *createdGroup.GroupImage == "" {
+		t.Error("Created group should have a group image")
 	}
 
 	// Now GET the group to ensure it was created
@@ -59,23 +97,27 @@ func TestCreateGroupValid(t *testing.T) {
 
 func TestCreateGroupInvalid(t *testing.T) {
 	setupGroupTest(t)
-	invalidGroup := map[string]interface{}{
-		// Missing data - just description, no name or creator_id
-		"description": "A test group",
-		// Intentionally omit name and creator_id for invalid test
-	}
-	body, _ := json.Marshal(invalidGroup)
-	req, err := http.NewRequest("POST", "/groups", bytes.NewBuffer(body))
+
+	// Test case: Missing name (should fail)
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+	writer.WriteField("description", "A test group")
+	writer.WriteField("creator_id", "1")
+	part, _ := writer.CreateFormFile("image", "test.jpg")
+	part.Write([]byte{0xFF, 0xD8, 0xFF, 0xE0}) // JPEG magic bytes
+	writer.Close()
+
+	req, err := http.NewRequest("POST", "/groups", &b)
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	recorder := httptest.NewRecorder()
 	testGroupRouter.ServeHTTP(recorder, req)
 
 	if status := recorder.Code; status != http.StatusBadRequest {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
+		t.Errorf("handler returned wrong status code for missing name: got %v want %v", status, http.StatusBadRequest)
 	}
 }
 
@@ -1103,18 +1145,14 @@ func TestGetGroupMembersMissingRequesterID(t *testing.T) {
 
 func TestGroupCreatorIsMemberOnCreation(t *testing.T) {
 	setupGroupTest(t)
-	newGroup := map[string]interface{}{
-		"name":        "Creator Membership Group",
-		"group_image": "image_url",
-		"description": "Group with creator as member",
-		"creator_id":  1,
-	}
-	body, _ := json.Marshal(newGroup)
-	req, err := http.NewRequest("POST", "/groups", bytes.NewBuffer(body))
+
+	body, contentType := createGroupFormData("Creator Membership Group", "Group with creator as member", 1)
+
+	req, err := http.NewRequest("POST", "/groups", body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", contentType)
 	recorder := httptest.NewRecorder()
 	testGroupRouter.ServeHTTP(recorder, req)
 	if status := recorder.Code; status != http.StatusCreated {
@@ -1159,5 +1197,48 @@ func TestGroupCreatorIsMemberOnCreation(t *testing.T) {
 	}
 	if !found {
 		t.Error("Group creator was not found as a member after group creation")
+	}
+}
+
+func TestCreateGroupWithoutImage(t *testing.T) {
+	setupGroupTest(t)
+
+	// Create a group without an image
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+	writer.WriteField("name", "Group Without Image")
+	writer.WriteField("description", "A test group without an image")
+	writer.WriteField("creator_id", "1")
+	// Intentionally omit image
+	writer.Close()
+
+	req, err := http.NewRequest("POST", "/groups", &b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	recorder := httptest.NewRecorder()
+	testGroupRouter.ServeHTTP(recorder, req)
+
+	if status := recorder.Code; status != http.StatusCreated {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusCreated)
+		t.Errorf("Response body: %s", recorder.Body.String())
+	}
+
+	var createdGroup group.Group
+	if err := json.NewDecoder(recorder.Body).Decode(&createdGroup); err != nil {
+		t.Fatal("Failed to decode response body")
+	}
+
+	// Verify the group was created without an image
+	if createdGroup.ID == 0 {
+		t.Error("Group ID should not be 0")
+	}
+	if createdGroup.Name != "Group Without Image" {
+		t.Errorf("Expected name 'Group Without Image', got '%s'", createdGroup.Name)
+	}
+	if createdGroup.GroupImage != nil {
+		t.Errorf("Expected group image to be nil, got '%s'", *createdGroup.GroupImage)
 	}
 }

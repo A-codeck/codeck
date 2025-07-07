@@ -21,7 +21,7 @@ func setupActivityTest(t *testing.T) {
 	SeedAllTestData(t)
 
 	// Initialize upload directory for tests
-	if err := utils.InitUploadDir(); err != nil {
+	if err := utils.InitUploadDirs(); err != nil {
 		t.Fatalf("Failed to initialize upload directory: %v", err)
 	}
 }
@@ -143,7 +143,7 @@ func TestCreateActivityValid(t *testing.T) {
 	// Cleanup uploaded file
 	if activity.ActivityImage != "" {
 		filename := strings.TrimPrefix(activity.ActivityImage, "/uploads/activities/")
-		utils.DeleteImage(filename)
+		utils.DeleteActivityImage(filename)
 	}
 }
 
@@ -199,7 +199,7 @@ func TestCreatePersonalActivityValid(t *testing.T) {
 	// Cleanup uploaded file
 	if activity.ActivityImage != "" {
 		filename := strings.TrimPrefix(activity.ActivityImage, "/uploads/activities/")
-		utils.DeleteImage(filename)
+		utils.DeleteActivityImage(filename)
 	}
 }
 

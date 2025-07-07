@@ -139,7 +139,7 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 	defer file.Close()
 
 	// Save the image
-	uploadResult, err := utils.SaveImage(file, header)
+	uploadResult, err := utils.SaveActivityImage(file, header)
 	if err != nil {
 		log.Printf("Failed to save image: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to save image: %v", err), http.StatusBadRequest)
@@ -166,7 +166,7 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 	if err := json.Unmarshal(jsonData, &activityObj); err != nil {
 		log.Printf("Failed to create activity object: %v", err)
 		// Clean up uploaded file on error
-		utils.DeleteImage(uploadResult.Filename)
+		utils.DeleteActivityImage(uploadResult.Filename)
 		http.Error(w, "Invalid activity data", http.StatusBadRequest)
 		return
 	}
@@ -177,7 +177,7 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 		if !groupExists {
 			log.Printf("Group not found: id=%d", groupID)
 			// Clean up uploaded file on error
-			utils.DeleteImage(uploadResult.Filename)
+			utils.DeleteActivityImage(uploadResult.Filename)
 			http.Error(w, fmt.Sprintf("Group not found: %d", groupID), http.StatusNotFound)
 			return
 		}

@@ -89,8 +89,8 @@ export interface ActivityCreateRequest {
 export interface GroupCreateRequest {
   name: string;
   description: string;
-  group_image?: string;
   creator_id: string; // Required by backend
+  image?: File; // Now optional - File object for upload
 }
 
 export interface CommentCreateRequest {

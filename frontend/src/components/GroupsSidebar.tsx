@@ -3,28 +3,22 @@ import {
   Box,
   Paper,
   Typography,
-  List,
   ListItem,
   ListItemButton,
   ListItemText,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Avatar,
   Divider,
   Chip,
 } from '@mui/material';
 import { 
   Add as AddIcon, 
-  Group as GroupIcon, 
   Home as HomeIcon 
 } from '@mui/icons-material';
 import { Group, GroupCreateRequest, UserStats } from '../types/api';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
+import CreateGroupDialog from './CreateGroupDialog';
 
 interface GroupsSidebarProps {
   selectedGroupId?: string;
@@ -48,15 +42,12 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
   const [groupRankings, setGroupRankings] = useState<{ [groupId: string]: UserStats[] }>({});
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newGroupData, setNewGroupData] = useState<GroupCreateRequest>({
-    name: '',
-    description: '',
-    creator_id: '',
-  });
 
   // Expose functions to parent component
   useImperativeHandle(ref, () => ({
-    openCreateDialog: () => setCreateDialogOpen(true),
+    openCreateDialog: () => {
+      setCreateDialogOpen(true);
+    },
   }));
 
   // Load user's groups using the new API endpoint
@@ -136,17 +127,11 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
     setGroupRankings(rankings);
   };
 
-  const handleCreateGroup = async () => {
+  const handleCreateGroup = async (groupData: GroupCreateRequest) => {
     if (!user) return;
 
     try {
-      // Add creator_id before sending the request
-      const groupDataWithCreator = {
-        ...newGroupData,
-        creator_id: user.id,
-      };
-      
-      const newGroup = await apiService.createGroup(groupDataWithCreator);
+      const newGroup = await apiService.createGroup(groupData);
       const updatedGroups = [...groups, newGroup];
       setGroups(updatedGroups);
       
@@ -157,23 +142,11 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
       if (onGroupsLoaded) {
         onGroupsLoaded(updatedGroups);
       }
-      setCreateDialogOpen(false);
-      setNewGroupData({
-        name: '',
-        description: '',
-        creator_id: '',
-      });
       onGroupsChange();
     } catch (error) {
       console.error('Error creating group:', error);
+      throw error; // Re-throw to let the dialog handle it
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewGroupData({
-      ...newGroupData,
-      [e.target.name]: e.target.value,
-    });
   };
 
   const getMedalEmoji = (position: number) => {
@@ -238,8 +211,12 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
                 sx={{ borderRadius: 1, flexDirection: 'column', alignItems: 'flex-start', py: 1.5 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1 }}>
-                  <Avatar sx={{ mr: 2, width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                    <GroupIcon />
+                  <Avatar 
+                    sx={{ mr: 2, width: 32, height: 32 }}
+                    src={group.group_image ? (group.group_image.startsWith('http') ? group.group_image : `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}${group.group_image}`) : undefined}
+                    alt={group.name}
+                  >
+                    {!group.group_image ? group.name.charAt(0).toUpperCase() : null}
                   </Avatar>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body2" fontWeight="medium" noWrap>
@@ -308,48 +285,12 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
       </Box>
 
       {/* Create Group Dialog */}
-      <Dialog
+      <CreateGroupDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Create New Group</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            name="name"
-            label="Group Name"
-            value={newGroupData.name}
-            onChange={handleInputChange}
-            required
-            sx={{ mb: 2, mt: 1 }}
-          />
-          <TextField
-            fullWidth
-            name="description"
-            label="Description"
-            value={newGroupData.description}
-            onChange={handleInputChange}
-            multiline
-            rows={3}
-            sx={{ mb: 2 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleCreateGroup}
-            variant="contained"
-            color="secondary"
-            disabled={!newGroupData.name}
-          >
-            Create Group
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onCreateGroup={handleCreateGroup}
+        creatorId={user?.id || ''}
+      />
     </Paper>
   );
 });
