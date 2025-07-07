@@ -1,7 +1,6 @@
 package responses
 
 import (
-	"backend/models/activity"
 	"backend/models/comment"
 	"backend/models/group"
 	"backend/models/user"
@@ -45,63 +44,55 @@ type GroupUpdateRequest struct {
 }
 
 type GroupDeleteRequest struct {
-	CreatorID int `json:"creator_id" example:"1"`
+	CreatorID string `json:"creator_id" example:"user123"`
 }
 
 type AddUserToGroupRequest struct {
-	UserID int `json:"user_id" example:"1"`
+	UserID string `json:"user_id" example:"user123"`
 }
 
 type RemoveUserFromGroupRequest struct {
-	UserID      int `json:"user_id" example:"1"`
-	RequesterID int `json:"requester_id" example:"2"`
+	UserID      string `json:"user_id" example:"user123"`
+	RequesterID string `json:"requester_id" example:"user456"`
 }
 
 type AddUserToGroupResponse struct {
 	Message string `json:"message" example:"User added to group successfully"`
-	GroupID int    `json:"group_id" example:"1"`
-	UserID  int    `json:"user_id" example:"1"`
+	GroupID string `json:"group_id" example:"group123"`
+	UserID  string `json:"user_id" example:"user123"`
 }
 
 type GroupMembersResponse struct {
-	GroupID     int                 `json:"group_id" example:"1"`
+	GroupID     string              `json:"group_id" example:"group123"`
 	Members     []group.GroupMember `json:"members"`
 	MemberCount int                 `json:"member_count" example:"3"`
 }
 
-type GroupActivitiesResponse struct {
-	GroupID        int                `json:"group_id" example:"1"`
-	Activities     []activity.Activity `json:"activities"`
-	ActivityCount  int                `json:"activity_count" example:"5"`
-}
-
 type CreateInviteRequest struct {
-	CreatorID int     `json:"creator_id" example:"1"`
+	CreatorID string  `json:"creator_id" example:"user123"`
 	ExpiresAt *string `json:"expires_at,omitempty" example:"2025-12-31T23:59:59Z"`
 }
 
 type JoinGroupRequest struct {
-	UserID int `json:"user_id" example:"1"`
+	UserID string `json:"user_id" example:"user123"`
 }
 
 type DeactivateInviteRequest struct {
-	RequesterID int `json:"requester_id" example:"1"`
+	RequesterID string `json:"requester_id" example:"user123"`
 }
 
 type SetNicknameRequest struct {
-	UserID      int    `json:"user_id" example:"1"`
-	RequesterID int    `json:"requester_id" example:"2"`
+	UserID      string `json:"user_id" example:"user123"`
+	RequesterID string `json:"requester_id" example:"user456"`
 	Nickname    string `json:"nickname" example:"Cool Coder"`
 }
 
 type DeleteNicknameRequest struct {
-	UserID      int `json:"user_id" example:"1"`
-	RequesterID int `json:"requester_id" example:"2"`
+	UserID      string `json:"user_id" example:"user123"`
+	RequesterID string `json:"requester_id" example:"user456"`
 }
 
 type ActivityCreateRequest struct {
-	CreatorID     int     `json:"creator_id" example:"1"`
-	GroupID       int     `json:"group_id" example:"1"`
 	Title         string  `json:"title" example:"Algorithm Contest"`
 	Date          string  `json:"date" example:"2025-12-31"`
 	ActivityImage *string `json:"activity_image,omitempty" example:"https://example.com/image.jpg"`
@@ -115,25 +106,25 @@ type ActivityUpdateRequest struct {
 }
 
 type ActivityDeleteRequest struct {
-	CreatorID int `json:"creator_id" example:"1"`
+	CreatorID string `json:"creator_id" example:"user123"`
 }
 
 type CommentCreateRequest struct {
-	UserID  int    `json:"user_id" example:"1"`
+	UserID  string `json:"user_id" example:"user123"`
 	Content string `json:"content" example:"Great activity!"`
 }
 
 type CommentDeleteRequest struct {
-	RequesterID int `json:"requester_id" example:"1"`
+	RequesterID string `json:"requester_id" example:"user123"`
 }
 
 type CommentsResponse struct {
-	ActivityID   int               `json:"activity_id" example:"1"`
+	ActivityID   string            `json:"activity_id" example:"activity123"`
 	Comments     []comment.Comment `json:"comments"`
 	CommentCount int               `json:"comment_count" example:"5"`
 }
 
 type CommentDeleteResponse struct {
 	Message   string `json:"message" example:"Comment deleted successfully"`
-	CommentID int    `json:"comment_id" example:"1"`
+	CommentID string `json:"comment_id" example:"comment123"`
 }

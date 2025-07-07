@@ -7,15 +7,13 @@ import (
 	"strconv"
 
 	"backend/models/activity"
-	"backend/models/group"
 	"backend/models/responses"
 
 	"github.com/gorilla/mux"
 )
 
 type ActivityController struct {
-	Model      activity.ActivityModel
-	GroupModel group.GroupModel
+	Model activity.ActivityModel
 }
 
 // swagger imports (used in annotations)
@@ -23,8 +21,8 @@ var (
 	_ = responses.ErrorResponse{}
 )
 
-func NewActivityController(model activity.ActivityModel, groupModel group.GroupModel) *ActivityController {
-	return &ActivityController{Model: model, GroupModel: groupModel}
+func NewActivityController(model activity.ActivityModel) *ActivityController {
+	return &ActivityController{Model: model}
 }
 
 // GetActivity godoc
@@ -77,14 +75,6 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 	if dateStr, ok := raw["date"].(string); ok && len(dateStr) == 10 {
 		raw["date"] = dateStr + "T00:00:00Z"
 	}
-
-	// Handle empty group_id as personal activity
-	if groupID, ok := raw["group_id"]; ok {
-		if groupID == "" {
-			raw["group_id"] = 0
-		}
-	}
-
 	fixed, _ := json.Marshal(raw)
 	var activity activity.Activity
 	if err := json.Unmarshal(fixed, &activity); err != nil {
@@ -95,18 +85,8 @@ func (ac *ActivityController) CreateActivity(w http.ResponseWriter, r *http.Requ
 
 	if activity.Title == "" || activity.Date.IsZero() {
 		log.Println("Missing required fields in activity creation")
-		http.Error(w, "Missing required fields: title and date are required", http.StatusBadRequest)
+		http.Error(w, "Missing required fields", http.StatusBadRequest)
 		return
-	}
-
-	// Only validate group if group_id is not zero (not a personal activity)
-	if activity.GroupID != 0 {
-		_, groupExists := ac.GroupModel.GetGroupByID(activity.GroupID)
-		if !groupExists {
-			log.Printf("Group not found: id=%d", activity.GroupID)
-			http.Error(w, "Group not found", http.StatusNotFound)
-			return
-		}
 	}
 
 	createdActivity := ac.Model.CreateActivity(activity)
@@ -231,45 +211,4 @@ func (ac *ActivityController) DeleteActivity(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-// GetUserFeed godoc
-// @Summary Get user activity feed
-// @Description Get activities from all groups the user is a member of
-// @Tags activities
-// @Accept json
-// @Produce json
-// @Param user_id query string true "User ID"
-// @Success 200 {array} activity.Activity
-// @Failure 400 {object} responses.ErrorResponse
-// @Router /activities/feed [get]
-func (ac *ActivityController) GetUserFeed(w http.ResponseWriter, r *http.Request) {
-	userIDStr := r.URL.Query().Get("user_id")
-	log.Printf("Getting feed for user %s", userIDStr)
-	if userIDStr == "" {
-		http.Error(w, "Missing user_id parameter", http.StatusBadRequest)
-		return
-	}
-
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		log.Printf("Invalid user_id: %v", err)
-		http.Error(w, "Invalid user_id", http.StatusBadRequest)
-		return
-	}
-
-	// Get all groups the user is a member of
-	userGroups := ac.GroupModel.GetUserGroups(userID)
-
-	var groupIDs []int
-	groupIDs = append(groupIDs, 0) // Include personal activities (group_id = 0)
-	for _, group := range userGroups {
-		groupIDs = append(groupIDs, group.ID)
-	}
-
-	// Get activities from these groups
-	activities := ac.Model.GetActivitiesByGroupIDs(groupIDs)
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(activities)
 }

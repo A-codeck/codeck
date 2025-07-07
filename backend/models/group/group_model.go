@@ -16,7 +16,6 @@ type GroupModel interface {
 	DeactivateInvite(inviteCode string) bool
 	GetActiveInvites(groupID int) []GroupInvite
 	GetGroupActivities(groupID int) ([]string, bool)
-	GetUserGroups(userID int) []Group
 }
 
 // DefaultGroupModel must be set in main.go after DB initialization

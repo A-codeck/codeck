@@ -3,8 +3,6 @@ package activity
 type ActivityModel interface {
 	GetActivityByID(id int) (Activity, bool)
 	GetActivitiesByCreatorID(creatorID int) []Activity
-	GetActivitiesByGroupID(groupID int) []Activity
-	GetActivitiesByGroupIDs(groupIDs []int) []Activity
 	CreateActivity(a Activity) Activity
 	UpdateActivity(id int, updates map[string]interface{}) (Activity, bool)
 	DeleteActivity(id int) bool

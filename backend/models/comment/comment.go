@@ -13,5 +13,5 @@ type Comment struct {
 	Content    string         `gorm:"type:text;not null" json:"content"`
 	CreatedAt  time.Time      `json:"created_at"`
 	UpdatedAt  time.Time      `json:"updated_at"`
-	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-" swaggerignore:"true"`
+	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
 }

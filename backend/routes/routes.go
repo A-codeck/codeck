@@ -7,8 +7,8 @@ import (
 )
 
 func RegisterGroupRoutes(r *mux.Router, groupController *controllers.GroupController) {
-	r.HandleFunc("/groups", groupController.CreateGroup).Methods("POST")
 	r.HandleFunc("/groups/{id}", groupController.GetGroup).Methods("GET")
+	r.HandleFunc("/groups", groupController.CreateGroup).Methods("POST")
 	r.HandleFunc("/groups/{id}", groupController.UpdateGroup).Methods("PUT")
 	r.HandleFunc("/groups/{id}", groupController.DeleteGroup).Methods("DELETE")
 	r.HandleFunc("/groups/{id}/members", groupController.GetGroupMembers).Methods("GET")
@@ -24,18 +24,16 @@ func RegisterGroupRoutes(r *mux.Router, groupController *controllers.GroupContro
 }
 
 func RegisterActivityRoutes(r *mux.Router, activityController *controllers.ActivityController) {
-	r.HandleFunc("/activities", activityController.CreateActivity).Methods("POST")
-	r.HandleFunc("/activities/feed", activityController.GetUserFeed).Methods("GET")
 	r.HandleFunc("/activities/{id}", activityController.GetActivity).Methods("GET")
+	r.HandleFunc("/activities", activityController.CreateActivity).Methods("POST")
 	r.HandleFunc("/activities/{id}", activityController.UpdateActivity).Methods("PUT")
 	r.HandleFunc("/activities/{id}", activityController.DeleteActivity).Methods("DELETE")
 }
 
 func RegisterUserRoutes(r *mux.Router, userController *controllers.UserController) {
-	r.HandleFunc("/users", userController.CreateUser).Methods("POST")
 	r.HandleFunc("/users/{id}", userController.GetUser).Methods("GET")
+	r.HandleFunc("/users", userController.CreateUser).Methods("POST")
 	r.HandleFunc("/users/{id}/activities", userController.GetUserActivities).Methods("GET")
-	r.HandleFunc("/users/{id}/groups", userController.GetUserGroups).Methods("GET")
 }
 
 func RegisterLoginRoutes(r *mux.Router, loginController *controllers.LoginController) {
@@ -43,7 +41,7 @@ func RegisterLoginRoutes(r *mux.Router, loginController *controllers.LoginContro
 }
 
 func RegisterCommentRoutes(r *mux.Router, commentController *controllers.CommentController) {
-	r.HandleFunc("/comments/{comment_id}", commentController.DeleteComment).Methods("DELETE")
-	r.HandleFunc("/activities/{activity_id}/comments", commentController.CreateComment).Methods("POST")
 	r.HandleFunc("/activities/{activity_id}/comments", commentController.GetCommentsByActivity).Methods("GET")
+	r.HandleFunc("/activities/{activity_id}/comments", commentController.CreateComment).Methods("POST")
+	r.HandleFunc("/comments/{comment_id}", commentController.DeleteComment).Methods("DELETE")
 }

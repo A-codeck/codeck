@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"backend/models/activity"
-	"backend/models/group"
 	"backend/models/responses"
 	"backend/models/user"
 
@@ -19,7 +18,6 @@ import (
 type UserController struct {
 	Model         user.UserModel
 	ActivityModel activity.ActivityModel
-	GroupModel    group.GroupModel
 }
 
 // swagger imports (used in annotations)
@@ -27,8 +25,8 @@ var (
 	_ = responses.ErrorResponse{}
 )
 
-func NewUserController(model user.UserModel, activityModel activity.ActivityModel, groupModel group.GroupModel) *UserController {
-	return &UserController{Model: model, ActivityModel: activityModel, GroupModel: groupModel}
+func NewUserController(model user.UserModel, activityModel activity.ActivityModel) *UserController {
+	return &UserController{Model: model, ActivityModel: activityModel}
 }
 
 // GetUser godoc
@@ -108,7 +106,6 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	createdUser := uc.Model.CreateUser(user)
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(createdUser)
 }
@@ -146,39 +143,4 @@ func (uc *UserController) GetUserActivities(w http.ResponseWriter, r *http.Reque
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(activities)
-}
-
-// GetUserGroups godoc
-// @Summary Get user groups
-// @Description Get all groups that a user is a member of
-// @Tags users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Success 200 {array} group.Group
-// @Failure 404 {object} responses.ErrorResponse
-// @Router /users/{id}/groups [get]
-func (uc *UserController) GetUserGroups(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userIDStr := vars["id"]
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		log.Printf("Invalid user id: %v", err)
-		http.Error(w, "Invalid user id", http.StatusBadRequest)
-		return
-	}
-
-	// Check if user exists
-	_, exists := uc.Model.GetUserByID(userID)
-	if !exists {
-		log.Printf("User not found: id=%d", userID)
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-
-	// Get all groups for this user
-	groups := uc.GroupModel.GetUserGroups(userID)
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(groups)
 }

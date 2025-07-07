@@ -38,19 +38,17 @@ func TestMain(m *testing.M) {
 	db.AutoMigrate(&group.Group{}, &activity.Activity{}, &comment.Comment{}, &user.User{})
 
 	testGroupModel = group.NewGormGroupModel(db)
-	testActivityModel = activity.NewGormActivityModel(db)
-	testUserModel = user.NewGormUserModel(db)
-	testCommentModel = comment.NewGormCommentModel(db)
-
-	groupController := controllers.NewGroupController(testGroupModel, testActivityModel, testUserModel)
+	groupController := controllers.NewGroupController(testGroupModel)
 	testGroupRouter = mux.NewRouter()
 	routes.RegisterGroupRoutes(testGroupRouter, groupController)
 
-	activityController := controllers.NewActivityController(testActivityModel, testGroupModel)
+	testActivityModel = activity.NewGormActivityModel(db)
+	activityController := controllers.NewActivityController(testActivityModel)
 	testActivityRouter = mux.NewRouter()
 	routes.RegisterActivityRoutes(testActivityRouter, activityController)
 
-	userController := controllers.NewUserController(testUserModel, testActivityModel, testGroupModel)
+	testUserModel = user.NewGormUserModel(db)
+	userController := controllers.NewUserController(testUserModel, testActivityModel)
 	testUserRouter = mux.NewRouter()
 	routes.RegisterUserRoutes(testUserRouter, userController)
 
@@ -58,6 +56,7 @@ func TestMain(m *testing.M) {
 	testLoginRouter = mux.NewRouter()
 	routes.RegisterLoginRoutes(testLoginRouter, loginController)
 
+	testCommentModel = comment.NewGormCommentModel(db)
 	commentController := controllers.NewCommentController(testCommentModel, testActivityModel, testGroupModel)
 	testCommentRouter = mux.NewRouter()
 	routes.RegisterCommentRoutes(testCommentRouter, commentController)

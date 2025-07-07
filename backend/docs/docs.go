@@ -58,47 +58,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/activities/feed": {
-            "get": {
-                "description": "Get activities from all groups the user is a member of",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "activities"
-                ],
-                "summary": "Get user activity feed",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/activity.Activity"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/responses.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/activities/{activity_id}/comments": {
             "get": {
                 "description": "Get all comments for a specific activity",
@@ -1320,47 +1279,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/users/{id}/groups": {
-            "get": {
-                "description": "Get all groups that a user is a member of",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Get user groups",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/group.Group"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/responses.ErrorResponse"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -1370,7 +1288,7 @@ const docTemplate = `{
                 "activity_image": {
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "creator_id": {
@@ -1382,16 +1300,13 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "group_id": {
-                    "type": "integer"
-                },
                 "id": {
                     "type": "integer"
                 },
                 "title": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1495,10 +1410,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "https://example.com/image.jpg"
                 },
-                "creator_id": {
-                    "type": "integer",
-                    "example": 1
-                },
                 "date": {
                     "type": "string",
                     "example": "2025-12-31"
@@ -1506,10 +1417,6 @@ const docTemplate = `{
                 "description": {
                     "type": "string",
                     "example": "A competitive programming contest"
-                },
-                "group_id": {
-                    "type": "integer",
-                    "example": 1
                 },
                 "title": {
                     "type": "string",
@@ -1521,8 +1428,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "creator_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1547,8 +1454,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1556,16 +1463,16 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "group_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "group123"
                 },
                 "message": {
                     "type": "string",
                     "example": "User added to group successfully"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1577,8 +1484,8 @@ const docTemplate = `{
                     "example": "Great activity!"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1586,8 +1493,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "requester_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1595,8 +1502,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "comment_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "comment123"
                 },
                 "message": {
                     "type": "string",
@@ -1608,8 +1515,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "activity_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "activity123"
                 },
                 "comment_count": {
                     "type": "integer",
@@ -1627,8 +1534,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "creator_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 },
                 "expires_at": {
                     "type": "string",
@@ -1640,8 +1547,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "requester_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1649,12 +1556,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "requester_id": {
-                    "type": "integer",
-                    "example": 2
+                    "type": "string",
+                    "example": "user456"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1692,8 +1599,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "creator_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1701,8 +1608,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "group_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "group123"
                 },
                 "member_count": {
                     "type": "integer",
@@ -1737,8 +1644,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1771,12 +1678,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "requester_id": {
-                    "type": "integer",
-                    "example": 2
+                    "type": "string",
+                    "example": "user456"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1788,12 +1695,12 @@ const docTemplate = `{
                     "example": "Cool Coder"
                 },
                 "requester_id": {
-                    "type": "integer",
-                    "example": 2
+                    "type": "string",
+                    "example": "user456"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },

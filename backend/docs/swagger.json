@@ -56,47 +56,6 @@
                 }
             }
         },
-        "/activities/feed": {
-            "get": {
-                "description": "Get activities from all groups the user is a member of",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "activities"
-                ],
-                "summary": "Get user activity feed",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/activity.Activity"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/responses.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/activities/{activity_id}/comments": {
             "get": {
                 "description": "Get all comments for a specific activity",
@@ -1318,47 +1277,6 @@
                     }
                 }
             }
-        },
-        "/users/{id}/groups": {
-            "get": {
-                "description": "Get all groups that a user is a member of",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Get user groups",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/group.Group"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/responses.ErrorResponse"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -1368,7 +1286,7 @@
                 "activity_image": {
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "creator_id": {
@@ -1380,16 +1298,13 @@
                 "description": {
                     "type": "string"
                 },
-                "group_id": {
-                    "type": "integer"
-                },
                 "id": {
                     "type": "integer"
                 },
                 "title": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1493,10 +1408,6 @@
                     "type": "string",
                     "example": "https://example.com/image.jpg"
                 },
-                "creator_id": {
-                    "type": "integer",
-                    "example": 1
-                },
                 "date": {
                     "type": "string",
                     "example": "2025-12-31"
@@ -1504,10 +1415,6 @@
                 "description": {
                     "type": "string",
                     "example": "A competitive programming contest"
-                },
-                "group_id": {
-                    "type": "integer",
-                    "example": 1
                 },
                 "title": {
                     "type": "string",
@@ -1519,8 +1426,8 @@
             "type": "object",
             "properties": {
                 "creator_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1545,8 +1452,8 @@
             "type": "object",
             "properties": {
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1554,16 +1461,16 @@
             "type": "object",
             "properties": {
                 "group_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "group123"
                 },
                 "message": {
                     "type": "string",
                     "example": "User added to group successfully"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1575,8 +1482,8 @@
                     "example": "Great activity!"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1584,8 +1491,8 @@
             "type": "object",
             "properties": {
                 "requester_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1593,8 +1500,8 @@
             "type": "object",
             "properties": {
                 "comment_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "comment123"
                 },
                 "message": {
                     "type": "string",
@@ -1606,8 +1513,8 @@
             "type": "object",
             "properties": {
                 "activity_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "activity123"
                 },
                 "comment_count": {
                     "type": "integer",
@@ -1625,8 +1532,8 @@
             "type": "object",
             "properties": {
                 "creator_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 },
                 "expires_at": {
                     "type": "string",
@@ -1638,8 +1545,8 @@
             "type": "object",
             "properties": {
                 "requester_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1647,12 +1554,12 @@
             "type": "object",
             "properties": {
                 "requester_id": {
-                    "type": "integer",
-                    "example": 2
+                    "type": "string",
+                    "example": "user456"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1690,8 +1597,8 @@
             "type": "object",
             "properties": {
                 "creator_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1699,8 +1606,8 @@
             "type": "object",
             "properties": {
                 "group_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "group123"
                 },
                 "member_count": {
                     "type": "integer",
@@ -1735,8 +1642,8 @@
             "type": "object",
             "properties": {
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1769,12 +1676,12 @@
             "type": "object",
             "properties": {
                 "requester_id": {
-                    "type": "integer",
-                    "example": 2
+                    "type": "string",
+                    "example": "user456"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },
@@ -1786,12 +1693,12 @@
                     "example": "Cool Coder"
                 },
                 "requester_id": {
-                    "type": "integer",
-                    "example": 2
+                    "type": "string",
+                    "example": "user456"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "user123"
                 }
             }
         },

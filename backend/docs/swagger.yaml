@@ -4,7 +4,7 @@ definitions:
     properties:
       activity_image:
         type: string
-      created_at:
+      createdAt:
         type: string
       creator_id:
         type: integer
@@ -12,13 +12,11 @@ definitions:
         type: string
       description:
         type: string
-      group_id:
-        type: integer
       id:
         type: integer
       title:
         type: string
-      updated_at:
+      updatedAt:
         type: string
     type: object
   comment.Comment:
@@ -86,18 +84,12 @@ definitions:
       activity_image:
         example: https://example.com/image.jpg
         type: string
-      creator_id:
-        example: 1
-        type: integer
       date:
         example: "2025-12-31"
         type: string
       description:
         example: A competitive programming contest
         type: string
-      group_id:
-        example: 1
-        type: integer
       title:
         example: Algorithm Contest
         type: string
@@ -105,8 +97,8 @@ definitions:
   responses.ActivityDeleteRequest:
     properties:
       creator_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.ActivityUpdateRequest:
     properties:
@@ -123,20 +115,20 @@ definitions:
   responses.AddUserToGroupRequest:
     properties:
       user_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.AddUserToGroupResponse:
     properties:
       group_id:
-        example: 1
-        type: integer
+        example: group123
+        type: string
       message:
         example: User added to group successfully
         type: string
       user_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.CommentCreateRequest:
     properties:
@@ -144,20 +136,20 @@ definitions:
         example: Great activity!
         type: string
       user_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.CommentDeleteRequest:
     properties:
       requester_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.CommentDeleteResponse:
     properties:
       comment_id:
-        example: 1
-        type: integer
+        example: comment123
+        type: string
       message:
         example: Comment deleted successfully
         type: string
@@ -165,8 +157,8 @@ definitions:
   responses.CommentsResponse:
     properties:
       activity_id:
-        example: 1
-        type: integer
+        example: activity123
+        type: string
       comment_count:
         example: 5
         type: integer
@@ -178,8 +170,8 @@ definitions:
   responses.CreateInviteRequest:
     properties:
       creator_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
       expires_at:
         example: "2025-12-31T23:59:59Z"
         type: string
@@ -187,17 +179,17 @@ definitions:
   responses.DeactivateInviteRequest:
     properties:
       requester_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.DeleteNicknameRequest:
     properties:
       requester_id:
-        example: 2
-        type: integer
+        example: user456
+        type: string
       user_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.ErrorResponse:
     properties:
@@ -223,14 +215,14 @@ definitions:
   responses.GroupDeleteRequest:
     properties:
       creator_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.GroupMembersResponse:
     properties:
       group_id:
-        example: 1
-        type: integer
+        example: group123
+        type: string
       member_count:
         example: 3
         type: integer
@@ -254,8 +246,8 @@ definitions:
   responses.JoinGroupRequest:
     properties:
       user_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.LoginRequest:
     properties:
@@ -277,11 +269,11 @@ definitions:
   responses.RemoveUserFromGroupRequest:
     properties:
       requester_id:
-        example: 2
-        type: integer
+        example: user456
+        type: string
       user_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.SetNicknameRequest:
     properties:
@@ -289,11 +281,11 @@ definitions:
         example: Cool Coder
         type: string
       requester_id:
-        example: 2
-        type: integer
+        example: user456
+        type: string
       user_id:
-        example: 1
-        type: integer
+        example: user123
+        type: string
     type: object
   responses.SuccessResponse:
     properties:
@@ -530,33 +522,6 @@ paths:
           schema:
             $ref: '#/definitions/responses.ErrorResponse'
       summary: Update an existing activity
-      tags:
-      - activities
-  /activities/feed:
-    get:
-      consumes:
-      - application/json
-      description: Get activities from all groups the user is a member of
-      parameters:
-      - description: User ID
-        in: query
-        name: user_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/activity.Activity'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/responses.ErrorResponse'
-      summary: Get user activity feed
       tags:
       - activities
   /comments/{comment_id}:
@@ -1203,33 +1168,6 @@ paths:
           schema:
             $ref: '#/definitions/responses.ErrorResponse'
       summary: Get user activities
-      tags:
-      - users
-  /users/{id}/groups:
-    get:
-      consumes:
-      - application/json
-      description: Get all groups that a user is a member of
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/group.Group'
-            type: array
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/responses.ErrorResponse'
-      summary: Get user groups
       tags:
       - users
 schemes:

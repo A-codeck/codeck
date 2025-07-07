@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"backend/models/group"
@@ -13,20 +12,16 @@ import (
 
 func setupGroupTest() {
 	testGroupModel.Clear()
-	testUserModel.Clear()
-	testActivityModel.Clear()
 	testGroupModel.SeedDefaultData()
-	testUserModel.SeedDefaultData()
 }
 
 func TestCreateGroupValid(t *testing.T) {
 	setupGroupTest()
 	validGroup := map[string]interface{}{
-		"name":        "newest Group",
+		"name":        "New Group",
 		"end_date":    "2025-12-31",
 		"group_image": "image_url",
 		"description": "A test group",
-		"creator_id":  1, // Ensure creator_id is present
 	}
 
 	body, _ := json.Marshal(validGroup)
@@ -42,23 +37,6 @@ func TestCreateGroupValid(t *testing.T) {
 	if status := recorder.Code; status != http.StatusCreated {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusCreated)
 	}
-
-	// Decode group ID from response
-	var createdGroup group.Group
-	if err := json.NewDecoder(recorder.Body).Decode(&createdGroup); err != nil {
-		t.Fatal("Failed to decode group creation response")
-	}
-
-	// Now GET the group to ensure it was created
-	getReq, err := http.NewRequest("GET", "/groups/"+strconv.Itoa(createdGroup.ID)+"?requester_id=1", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	getRecorder := httptest.NewRecorder()
-	testGroupRouter.ServeHTTP(getRecorder, getReq)
-	if status := getRecorder.Code; status != http.StatusOK {
-		t.Errorf("GET handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
 }
 
 func TestCreateGroupInvalid(t *testing.T) {
@@ -66,7 +44,6 @@ func TestCreateGroupInvalid(t *testing.T) {
 	invalidGroup := map[string]interface{}{
 		// Missing data
 		"end_date": "2025-12-31",
-		// Intentionally omit creator_id for invalid test
 	}
 	body, _ := json.Marshal(invalidGroup)
 	req, err := http.NewRequest("POST", "/groups", bytes.NewBuffer(body))
@@ -1103,67 +1080,5 @@ func TestGetGroupMembersMissingRequesterID(t *testing.T) {
 
 	if status := recorder.Code; status != http.StatusBadRequest {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
-	}
-}
-
-func TestGroupCreatorIsMemberOnCreation(t *testing.T) {
-	setupGroupTest()
-	newGroup := map[string]interface{}{
-		"name":        "Creator Membership Group",
-		"end_date":    "2025-12-31",
-		"group_image": "image_url",
-		"description": "Group with creator as member",
-		"creator_id":  1,
-	}
-	body, _ := json.Marshal(newGroup)
-	req, err := http.NewRequest("POST", "/groups", bytes.NewBuffer(body))
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	recorder := httptest.NewRecorder()
-	testGroupRouter.ServeHTTP(recorder, req)
-	if status := recorder.Code; status != http.StatusCreated {
-		t.Fatalf("handler returned wrong status code: got %v want %v", status, http.StatusCreated)
-	}
-
-	// Decode group ID from response
-	var createdGroup group.Group
-	if err := json.NewDecoder(recorder.Body).Decode(&createdGroup); err != nil {
-		t.Fatal("Failed to decode group creation response")
-	}
-
-	// Now get group members and check for creator
-	req, err = http.NewRequest("GET", "/groups/"+strconv.Itoa(createdGroup.ID)+"/members?requester_id=1", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	recorder = httptest.NewRecorder()
-	testGroupRouter.ServeHTTP(recorder, req)
-	if status := recorder.Code; status != http.StatusOK {
-		t.Fatalf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
-
-	var response map[string]interface{}
-	if err := json.NewDecoder(recorder.Body).Decode(&response); err != nil {
-		t.Fatal("Failed to decode response body")
-	}
-	members, ok := response["members"].([]interface{})
-	if !ok {
-		t.Fatal("Expected members array in response")
-	}
-	found := false
-	for _, m := range members {
-		member, ok := m.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		if id, ok := member["user_id"].(float64); ok && int(id) == 1 {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Error("Group creator was not found as a member after group creation")
 	}
 }
