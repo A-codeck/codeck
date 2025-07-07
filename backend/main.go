@@ -57,16 +57,19 @@ func main() {
 	group.DefaultGroupModel = group.NewGormGroupModel(db)
 	activity.DefaultActivityModel = activity.NewGormActivityModel(db)
 	user.DefaultUserModel = user.NewGormUserModel(db)
+	comment.DefaultCommentModel = comment.NewGormCommentModel(db)
 
-	groupController := controllers.NewGroupController(group.DefaultGroupModel, activity.DefaultActivityModel)
+	groupController := controllers.NewGroupController(group.DefaultGroupModel, activity.DefaultActivityModel, user.DefaultUserModel)
 	activityController := controllers.NewActivityController(activity.DefaultActivityModel, group.DefaultGroupModel)
 	userController := controllers.NewUserController(user.DefaultUserModel, activity.DefaultActivityModel, group.DefaultGroupModel)
 	loginController := controllers.NewLoginController(user.DefaultUserModel)
+	commentController := controllers.NewCommentController(comment.DefaultCommentModel, activity.DefaultActivityModel, group.DefaultGroupModel)
 
 	routes.RegisterGroupRoutes(r, groupController)
 	routes.RegisterActivityRoutes(r, activityController)
 	routes.RegisterUserRoutes(r, userController)
 	routes.RegisterLoginRoutes(r, loginController)
+	routes.RegisterCommentRoutes(r, commentController)
 
 	// Configure CORS
 	c := cors.New(cors.Options{
