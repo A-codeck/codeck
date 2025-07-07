@@ -11,16 +11,13 @@ import (
 	"backend/models/group"
 )
 
-func setupGroupTest() {
-	testGroupModel.Clear()
-	testUserModel.Clear()
-	testActivityModel.Clear()
-	testGroupModel.SeedDefaultData()
-	testUserModel.SeedDefaultData()
+func setupGroupTest(t *testing.T) {
+	// Use comprehensive seeding that includes all dependencies
+	SeedAllTestData(t)
 }
 
 func TestCreateGroupValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	validGroup := map[string]interface{}{
 		"name":        "newest Group",
 		"end_date":    "2025-12-31",
@@ -62,7 +59,7 @@ func TestCreateGroupValid(t *testing.T) {
 }
 
 func TestCreateGroupInvalid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	invalidGroup := map[string]interface{}{
 		// Missing data
 		"end_date": "2025-12-31",
@@ -84,7 +81,7 @@ func TestCreateGroupInvalid(t *testing.T) {
 }
 
 func TestReadGroup(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	req, err := http.NewRequest("GET", "/groups/1?requester_id=1", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -108,7 +105,7 @@ func TestReadGroup(t *testing.T) {
 }
 
 func TestUpdateGroupValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	validUpdate := map[string]interface{}{
 		"description": "Updated description",
 		"group_image": "new_image_url",
@@ -131,7 +128,7 @@ func TestUpdateGroupValid(t *testing.T) {
 }
 
 func TestUpdateGroupInvalid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	invalidUpdate := map[string]interface{}{
 		// Missing required fields
 		"name": "Invalid Update",
@@ -153,7 +150,7 @@ func TestUpdateGroupInvalid(t *testing.T) {
 }
 
 func TestDeleteGroupInvalid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	invalidRequest := map[string]interface{}{
 		"creator_id": 2,
 	}
@@ -174,7 +171,7 @@ func TestDeleteGroupInvalid(t *testing.T) {
 }
 
 func TestDeleteGroupValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	validRequest := map[string]interface{}{
 		"creator_id": 1,
 	}
@@ -195,7 +192,7 @@ func TestDeleteGroupValid(t *testing.T) {
 }
 
 func TestAddUserToGroupValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	validRequest := map[string]interface{}{
 		"user_id":  2,
 		"nickname": "TestUser",
@@ -217,7 +214,7 @@ func TestAddUserToGroupValid(t *testing.T) {
 }
 
 func TestAddUserToGroupInvalid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	invalidRequest := map[string]interface{}{
 		"random": "2",
 	}
@@ -238,7 +235,7 @@ func TestAddUserToGroupInvalid(t *testing.T) {
 }
 
 func TestAddUserToGroupDuplicate(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// Add user first time
 	validRequest := map[string]interface{}{
 		"user_id": 2,
@@ -266,7 +263,7 @@ func TestAddUserToGroupDuplicate(t *testing.T) {
 }
 
 func TestRemoveUserFromGroupValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// First add a user
 	addRequest := map[string]interface{}{
 		"user_id": 2,
@@ -298,7 +295,7 @@ func TestRemoveUserFromGroupValid(t *testing.T) {
 }
 
 func TestRemoveUserFromGroupForbidden(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// First add a user
 	addRequest := map[string]interface{}{
 		"user_id": 2,
@@ -330,7 +327,7 @@ func TestRemoveUserFromGroupForbidden(t *testing.T) {
 }
 
 func TestGetGroupMembers(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// Add some users to the group
 	users := []int{2, 3}
 	for _, userID := range users {
@@ -368,7 +365,7 @@ func TestGetGroupMembers(t *testing.T) {
 }
 
 func TestCreateInviteLinkValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	validRequest := map[string]interface{}{
 		"creator_id": 1, // Group creator
 	}
@@ -404,7 +401,7 @@ func TestCreateInviteLinkValid(t *testing.T) {
 }
 
 func TestCreateInviteLinkForbidden(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	invalidRequest := map[string]interface{}{
 		"creator_id": 2, // Not group creator
 	}
@@ -425,7 +422,7 @@ func TestCreateInviteLinkForbidden(t *testing.T) {
 }
 
 func TestJoinGroupByInviteValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// First create an invite
 	createRequest := map[string]interface{}{
@@ -496,7 +493,7 @@ func TestJoinGroupByInviteValid(t *testing.T) {
 }
 
 func TestJoinGroupByInviteInvalidCode(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	joinRequest := map[string]interface{}{
 		"user_id": 2,
@@ -517,7 +514,7 @@ func TestJoinGroupByInviteInvalidCode(t *testing.T) {
 }
 
 func TestJoinGroupByInviteDuplicateUser(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// First create an invite
 	createRequest := map[string]interface{}{
@@ -559,7 +556,7 @@ func TestJoinGroupByInviteDuplicateUser(t *testing.T) {
 }
 
 func TestGetGroupInvites(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// Create a couple of invites
 	for i := 0; i < 2; i++ {
@@ -597,7 +594,7 @@ func TestGetGroupInvites(t *testing.T) {
 }
 
 func TestDeactivateInviteValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// First create an invite
 	createRequest := map[string]interface{}{
@@ -632,7 +629,7 @@ func TestDeactivateInviteValid(t *testing.T) {
 }
 
 func TestDeactivateInviteForbidden(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// First create an invite
 	createRequest := map[string]interface{}{
@@ -667,7 +664,7 @@ func TestDeactivateInviteForbidden(t *testing.T) {
 }
 
 func TestSetUserNicknameValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// First add a user to the group
 	addRequest := map[string]interface{}{
 		"user_id": 2,
@@ -709,7 +706,7 @@ func TestSetUserNicknameValid(t *testing.T) {
 }
 
 func TestSetUserNicknameByGroupCreator(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// First add a user to the group
 	addRequest := map[string]interface{}{
 		"user_id": 2,
@@ -742,7 +739,7 @@ func TestSetUserNicknameByGroupCreator(t *testing.T) {
 }
 
 func TestSetUserNicknameForbidden(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// First add a user to the group
 	addRequest := map[string]interface{}{
 		"user_id": 2,
@@ -775,7 +772,7 @@ func TestSetUserNicknameForbidden(t *testing.T) {
 }
 
 func TestSetUserNicknameUserNotInGroup(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// Try to set nickname for a user not in the group
 	nicknameRequest := map[string]interface{}{
@@ -799,7 +796,7 @@ func TestSetUserNicknameUserNotInGroup(t *testing.T) {
 }
 
 func TestSetUserNicknameTooLong(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// First add a user to the group
 	addRequest := map[string]interface{}{
 		"user_id": 2,
@@ -837,7 +834,7 @@ func TestSetUserNicknameTooLong(t *testing.T) {
 }
 
 func TestDeleteUserNicknameValid(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// First add a user with a nickname
 	addRequest := map[string]interface{}{
 		"user_id":  2,
@@ -879,7 +876,7 @@ func TestDeleteUserNicknameValid(t *testing.T) {
 }
 
 func TestDeleteUserNicknameForbidden(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	// First add a user with a nickname
 	addRequest := map[string]interface{}{
 		"user_id":  2,
@@ -912,7 +909,7 @@ func TestDeleteUserNicknameForbidden(t *testing.T) {
 }
 
 func TestGetGroupForbidden(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	req, err := http.NewRequest("GET", "/groups/1?requester_id=999", nil)
 	if err != nil {
@@ -928,7 +925,7 @@ func TestGetGroupForbidden(t *testing.T) {
 }
 
 func TestGetGroupAsMember(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// First add a user to the group
 	addRequest := map[string]interface{}{
@@ -955,7 +952,7 @@ func TestGetGroupAsMember(t *testing.T) {
 }
 
 func TestGetGroupMembersForbidden(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	req, err := http.NewRequest("GET", "/groups/1/members?requester_id=999", nil)
 	if err != nil {
@@ -971,7 +968,7 @@ func TestGetGroupMembersForbidden(t *testing.T) {
 }
 
 func TestGetGroupActivitiesAsMember(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// First add a user to the group
 	addRequest := map[string]interface{}{
@@ -1007,13 +1004,13 @@ func TestGetGroupActivitiesAsMember(t *testing.T) {
 
 	if activities, ok := response["activities"].([]interface{}); !ok {
 		t.Errorf("Expected activities to be an array, got %v", response["activities"])
-	} else if len(activities) != 0 {
-		t.Errorf("Expected 0 activities, got %d", len(activities))
+	} else if len(activities) != 1 {
+		t.Errorf("Expected 1 activity (from seeded data), got %d", len(activities))
 	}
 }
 
 func TestGetGroupActivitiesForbidden(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	req, err := http.NewRequest("GET", "/groups/1/activities?requester_id=999", nil)
 	if err != nil {
@@ -1029,7 +1026,7 @@ func TestGetGroupActivitiesForbidden(t *testing.T) {
 }
 
 func TestGetGroupRequiresAuthorization(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// Try to get group without being a member
 	req, err := http.NewRequest("GET", "/groups/1?requester_id=999", nil)
@@ -1046,7 +1043,7 @@ func TestGetGroupRequiresAuthorization(t *testing.T) {
 }
 
 func TestGetGroupAllowsGroupMembers(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// First add a user to the group
 	addRequest := map[string]interface{}{
@@ -1073,7 +1070,7 @@ func TestGetGroupAllowsGroupMembers(t *testing.T) {
 }
 
 func TestGetGroupMissingRequesterID(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// Try to get group without requester_id
 	req, err := http.NewRequest("GET", "/groups/1", nil)
@@ -1090,7 +1087,7 @@ func TestGetGroupMissingRequesterID(t *testing.T) {
 }
 
 func TestGetGroupMembersMissingRequesterID(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 
 	// Try to get group members without requester_id
 	req, err := http.NewRequest("GET", "/groups/1/members", nil)
@@ -1107,7 +1104,7 @@ func TestGetGroupMembersMissingRequesterID(t *testing.T) {
 }
 
 func TestGroupCreatorIsMemberOnCreation(t *testing.T) {
-	setupGroupTest()
+	setupGroupTest(t)
 	newGroup := map[string]interface{}{
 		"name":        "Creator Membership Group",
 		"end_date":    "2025-12-31",

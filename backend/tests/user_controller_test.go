@@ -11,13 +11,13 @@ import (
 	"backend/models/activity"
 )
 
-func setupUserTest() {
-	testUserModel.Clear()
-	testUserModel.SeedDefaultData()
+func setupUserTest(t *testing.T) {
+	// Use comprehensive seeding that includes all dependencies
+	SeedAllTestData(t)
 }
 
 func TestCreateUserValid(t *testing.T) {
-	setupUserTest()
+	setupUserTest(t)
 	userData := map[string]interface{}{
 		"email":    "newuser@example.com",
 		"name":     "New User",
@@ -53,7 +53,7 @@ func TestCreateUserValid(t *testing.T) {
 }
 
 func TestCreateUserInvalid(t *testing.T) {
-	setupUserTest()
+	setupUserTest(t)
 
 	invalidUser := map[string]interface{}{
 		"name": "Just a name",
@@ -74,7 +74,7 @@ func TestCreateUserInvalid(t *testing.T) {
 }
 
 func TestGetUserInfo(t *testing.T) {
-	setupUserTest()
+	setupUserTest(t)
 	req, err := http.NewRequest("GET", "/users/1", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -102,7 +102,7 @@ func TestGetUserInfo(t *testing.T) {
 }
 
 func TestGetUserActivities(t *testing.T) {
-	setupUserTest()
+	setupUserTest(t)
 	testActivityModel.Clear()
 	testActivityModel.SeedDefaultData()
 
@@ -158,7 +158,7 @@ func TestGetUserActivities(t *testing.T) {
 }
 
 func TestGetUserActivitiesUserNotFound(t *testing.T) {
-	setupUserTest()
+	setupUserTest(t)
 
 	req, err := http.NewRequest("GET", "/users/999/activities", nil)
 	if err != nil {

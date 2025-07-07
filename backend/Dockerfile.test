@@ -1,0 +1,19 @@
+FROM golang:1.24-alpine
+
+# Install basic tools
+RUN apk add --no-cache git
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Default command to run tests
+CMD ["go", "test", "-v", "./tests/..."]
