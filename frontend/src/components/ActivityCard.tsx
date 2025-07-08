@@ -86,6 +86,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
       });
       setComments([...(comments || []), comment]);
       setNewComment('');
+      loadComments();
     } catch (error) {
       console.error('Error adding comment:', error);
     }
