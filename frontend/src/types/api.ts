@@ -98,6 +98,19 @@ export interface CommentCreateRequest {
   user_id: string;
 }
 
+export interface AddUserByEmailRequest {
+  email: string;
+  requester_id: string;
+}
+
+export interface LeaveGroupRequest {
+  user_id: string;
+}
+
+export interface JoinGroupByInviteRequest {
+  invite_code: string;
+}
+
 // Response types
 export interface ErrorResponse {
   error: string;

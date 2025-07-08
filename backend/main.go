@@ -16,8 +16,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"backend/controllers"
 	"backend/utils"
@@ -38,6 +40,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// getEnv gets an environment variable or returns a default value
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
 func main() {
 	// Initialize upload directory
 	if err := utils.InitUploadDirs(); err != nil {
@@ -53,7 +63,17 @@ func main() {
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 	// Migrate db
 	log.Println("Trying to migrate")
-	dsn := "host=db user=my_usr password=my_pwd dbname=codeck port=5432 sslmode=disable"
+
+	// Get database configuration from environment variables with defaults
+	dbHost := getEnv("DB_HOST", "db")
+	dbPort := getEnv("DB_PORT", "5432")
+	dbUser := getEnv("DB_USER", "my_usr")
+	dbPassword := getEnv("DB_PASSWORD", "my_pwd")
+	dbName := getEnv("DB_NAME", "codeck")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		dbHost, dbUser, dbPassword, dbName, dbPort)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
