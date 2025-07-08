@@ -145,6 +145,12 @@ export interface GroupMembersResponse {
   members: GroupMemberWithUser[];
 }
 
+export interface GroupActivitiesResponse {
+  group_id: number;
+  activities: Activity[];
+  activity_count: number;
+}
+
 // Extended types for frontend
 export interface ActivityWithGroup extends Activity {
   group?: Group;
