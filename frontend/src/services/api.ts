@@ -182,8 +182,8 @@ class ApiService {
   }
 
   async getGroupInvites(groupId: string): Promise<GroupInvite[]> {
-    const response = await this.api.get<GroupInvite[]>(`/groups/${groupId}/invites`);
-    return response.data;
+    const response = await this.api.get<{invites: GroupInvite[]}>(`/groups/${groupId}/invites`);
+    return response.data.invites;
   }
 
   async joinGroupByInvite(inviteCode: string, userId: string): Promise<void> {

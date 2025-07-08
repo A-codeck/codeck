@@ -76,6 +76,20 @@ type GroupMembersResponse struct {
 	MemberCount int                 `json:"member_count" example:"3"`
 }
 
+type GroupMemberWithUser struct {
+	UserID    int     `json:"user_id" example:"1"`
+	GroupID   int     `json:"group_id" example:"1"`
+	Nickname  *string `json:"nickname,omitempty" example:"Cool Coder"`
+	UserName  string  `json:"user_name" example:"John Doe"`
+	UserEmail string  `json:"user_email" example:"john@example.com"`
+}
+
+type GroupMembersWithUsersResponse struct {
+	GroupID     int                   `json:"group_id" example:"1"`
+	Members     []GroupMemberWithUser `json:"members"`
+	MemberCount int                   `json:"member_count" example:"3"`
+}
+
 type GroupActivitiesResponse struct {
 	GroupID       int                 `json:"group_id" example:"1"`
 	Activities    []activity.Activity `json:"activities"`
