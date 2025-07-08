@@ -161,16 +161,22 @@ class ApiService {
     await this.api.post(`/groups/${groupId}/members`, { user_id: userId });
   }
 
-  async removeUserFromGroup(groupId: string, userId: string, requesterId: string): Promise<void> {
-    await this.api.delete(`/groups/${groupId}/members`, {
-      data: { user_id: userId, requester_id: requesterId }
+  async addUserToGroupByEmail(groupId: string, email: string, requesterId: string): Promise<void> {
+    await this.api.post(`/groups/${groupId}/members/email`, { 
+      email: email, 
+      requester_id: requesterId 
     });
   }
 
-  async createGroupInvite(groupId: string, creatorId: string, expiresAt: string): Promise<GroupInvite> {
+  async leaveGroup(groupId: string, userId: string): Promise<{ group_deleted: boolean }> {
+    const response = await this.api.post(`/groups/${groupId}/leave`, { user_id: userId });
+    return response.data;
+  }
+
+  async createGroupInvite(groupId: string, creatorId: string, expiresAt?: string): Promise<GroupInvite> {
     const response = await this.api.post<GroupInvite>(`/groups/${groupId}/invites`, {
       creator_id: creatorId,
-      expires_at: expiresAt
+      expires_at: expiresAt || null // null for permanent invite
     });
     return response.data;
   }
@@ -182,6 +188,12 @@ class ApiService {
 
   async joinGroupByInvite(inviteCode: string, userId: string): Promise<void> {
     await this.api.post(`/invites/${inviteCode}/join`, { user_id: userId });
+  }
+
+  async deactivateInvite(inviteCode: string, requesterId: string): Promise<void> {
+    await this.api.delete(`/invites/${inviteCode}/deactivate`, {
+      data: { requester_id: requesterId }
+    });
   }
 
   // Comment endpoints

@@ -19,6 +19,7 @@ import GroupsSidebar, { GroupsSidebarRef } from './GroupsSidebar';
 import ActivityFeed from './ActivityFeed';
 import GroupRanking from './GroupRanking';
 import UserDashboard from './UserDashboard';
+import JoinGroupDialog from './JoinGroupDialog';
 
 const HomePage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -26,6 +27,7 @@ const HomePage: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [userGroups, setUserGroups] = useState<Group[]>([]);
   const [groupsLoaded, setGroupsLoaded] = useState(false);
+  const [joinGroupDialogOpen, setJoinGroupDialogOpen] = useState(false);
   const groupsSidebarRef = useRef<GroupsSidebarRef>(null);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -53,6 +55,11 @@ const HomePage: React.FC = () => {
   const handleGroupsLoaded = (groups: Group[]) => {
     setUserGroups(groups);
     setGroupsLoaded(true);
+  };
+
+  const handleGroupJoined = () => {
+    // Refresh the groups list
+    window.location.reload(); // Simple approach, could be improved with state management
   };
 
   const renderNoGroupsMessage = () => (
@@ -85,6 +92,7 @@ const HomePage: React.FC = () => {
             variant="outlined"
             color="secondary"
             size="large"
+            onClick={() => setJoinGroupDialogOpen(true)}
           >
             Join a Group
           </Button>
@@ -198,6 +206,13 @@ const HomePage: React.FC = () => {
           );
         })()}
       </Box>
+
+      {/* Join Group Dialog */}
+      <JoinGroupDialog
+        open={joinGroupDialogOpen}
+        onClose={() => setJoinGroupDialogOpen(false)}
+        onGroupJoined={handleGroupJoined}
+      />
     </Box>
   );
 };

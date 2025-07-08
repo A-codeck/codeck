@@ -10,15 +10,19 @@ import {
   Avatar,
   Divider,
   Chip,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import { 
   Add as AddIcon, 
-  Home as HomeIcon 
+  Home as HomeIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { Group, GroupCreateRequest, UserStats } from '../types/api';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import CreateGroupDialog from './CreateGroupDialog';
+import GroupManagementDialog from './GroupManagementDialog';
 
 interface GroupsSidebarProps {
   selectedGroupId?: string;
@@ -42,6 +46,8 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
   const [groupRankings, setGroupRankings] = useState<{ [groupId: string]: UserStats[] }>({});
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [managementDialogOpen, setManagementDialogOpen] = useState(false);
+  const [selectedGroupForManagement, setSelectedGroupForManagement] = useState<Group | null>(null);
 
   // Expose functions to parent component
   useImperativeHandle(ref, () => ({
@@ -158,6 +164,17 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
     }
   };
 
+  const handleManageGroup = (group: Group, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setSelectedGroupForManagement(group);
+    setManagementDialogOpen(true);
+  };
+
+  const handleGroupManagementUpdate = () => {
+    loadGroups();
+    onGroupsChange();
+  };
+
   return (
     <Paper
       sx={{
@@ -226,6 +243,18 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
                       {group.description}
                     </Typography>
                   </Box>
+                  {/* Show manage button for group owners */}
+                  {user && group.creator_id === user.id && (
+                    <Tooltip title="Manage Group">
+                      <IconButton
+                        size="small"
+                        onClick={(event) => handleManageGroup(group, event)}
+                        sx={{ ml: 1 }}
+                      >
+                        <SettingsIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </Box>
                 
                 {/* Top 3 Users */}
@@ -291,6 +320,19 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
         onCreateGroup={handleCreateGroup}
         creatorId={user?.id || ''}
       />
+
+      {/* Group Management Dialog */}
+      {selectedGroupForManagement && (
+        <GroupManagementDialog
+          open={managementDialogOpen}
+          onClose={() => {
+            setManagementDialogOpen(false);
+            setSelectedGroupForManagement(null);
+          }}
+          group={selectedGroupForManagement}
+          onGroupUpdated={handleGroupManagementUpdate}
+        />
+      )}
     </Paper>
   );
 });
