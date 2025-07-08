@@ -12,6 +12,7 @@ import type {
   GroupCreateRequest,
   CommentCreateRequest,
   CommentsResponse,
+  CommentsWithUsersResponse,
   GroupMembersResponse,
   GroupInvite,
 } from '../types/api';
@@ -185,8 +186,8 @@ class ApiService {
   }
 
   // Comment endpoints
-  async getActivityComments(activityId: string): Promise<CommentsResponse> {
-    const response = await this.api.get<CommentsResponse>(`/activities/${activityId}/comments`);
+  async getActivityComments(activityId: string): Promise<CommentsWithUsersResponse> {
+    const response = await this.api.get<CommentsWithUsersResponse>(`/activities/${activityId}/comments`);
     return response.data;
   }
 
