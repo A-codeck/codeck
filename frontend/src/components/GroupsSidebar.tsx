@@ -174,12 +174,18 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
                   >
                     {!group.group_image ? group.name.charAt(0).toUpperCase() : null}
                   </Avatar>
-                  <Box sx={{ flex: 1 }}>
+                  <Box sx={{ 
+                    flex: 1, 
+                    minWidth: 0,
+                    pr: user && group.creator_id === user.id ? '40px' : 0 
+                  }}>
                     <Typography variant="body2" fontWeight="medium" noWrap>
                       {group.name}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" noWrap>
-                      {group.description}
+                        {group.description?.length > 23
+                        ? group.description.slice(0, 23) + '…'
+                        : group.description}
                     </Typography>
                   </Box>
                   {/* Show manage button for group owners */}
@@ -188,7 +194,11 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
                       <IconButton
                         size="small"
                         onClick={(event) => handleManageGroup(group, event)}
-                        sx={{ ml: 1 }}
+                        sx={{ 
+                          ml: 1,
+                          position: 'absolute',
+                          right: 8,
+                        }}
                       >
                         <SettingsIcon fontSize="small" />
                       </IconButton>
