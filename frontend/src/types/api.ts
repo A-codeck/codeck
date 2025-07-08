@@ -14,6 +14,7 @@ export interface Activity {
   date: string;
   creator_id: string;
   group_ids?: string[]; // Now supports multiple groups
+  created_at: string;
 }
 
 // Activity with group information for feed display
@@ -25,6 +26,7 @@ export interface ActivityWithGroups {
   date: string;
   creator_id: string;
   group_names?: string[]; // Group names for display
+  created_at: string;
 }
 
 // Group types
