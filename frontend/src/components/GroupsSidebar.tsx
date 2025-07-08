@@ -39,7 +39,6 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
 }, ref) => {
   const { user } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
-  const [groupRankings, setGroupRankings] = useState<{ [groupId: string]: UserStats[] }>({});
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
@@ -64,9 +63,6 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
       const userGroups = await apiService.getUserGroups(user.id);
       setGroups(userGroups);
       
-      // Load rankings for each group
-      await loadGroupRankings(userGroups);
-      
       // Call the callback to pass groups data to parent
       if (onGroupsLoaded) {
         onGroupsLoaded(userGroups);
@@ -82,51 +78,6 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
     }
   };
 
-  const loadGroupRankings = async (groupList: Group[]) => {
-    if (!user) return;
-
-    const rankings: { [groupId: string]: UserStats[] } = {};
-
-    for (const group of groupList) {
-      try {
-        // Load group members
-        const membersData = await apiService.getGroupMembers(group.id, user.id);
-        
-        // Calculate rankings by getting activities for each member
-        const userStats: UserStats[] = [];
-        
-        for (const member of membersData.members) {
-          try {
-            // Get user info
-            const userData = await apiService.getUser(member.user_id);
-            
-            // Get user's activities in this group
-            const groupActivities = await apiService.getGroupActivities(group.id, user.id);
-            const userActivities = groupActivities.filter(activity => activity.creator_id === member.user_id);
-            
-            userStats.push({
-              user_id: member.user_id,
-              user_name: userData.name,
-              activity_count: userActivities.length,
-            });
-          } catch (error) {
-            console.error(`Error loading data for user ${member.user_id}:`, error);
-          }
-        }
-        
-        // Sort by activity count (descending) and take top 3
-        userStats.sort((a, b) => b.activity_count - a.activity_count);
-        rankings[group.id] = userStats.slice(0, 3);
-        
-      } catch (error) {
-        console.error(`Error loading ranking for group ${group.id}:`, error);
-        rankings[group.id] = [];
-      }
-    }
-    
-    setGroupRankings(rankings);
-  };
-
   const handleCreateGroup = async (groupData: GroupCreateRequest) => {
     if (!user) return;
 
@@ -134,9 +85,6 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
       const newGroup = await apiService.createGroup(groupData);
       const updatedGroups = [...groups, newGroup];
       setGroups(updatedGroups);
-      
-      // Load rankings for the updated groups list
-      await loadGroupRankings(updatedGroups);
       
       // Call the callback to pass updated groups data to parent
       if (onGroupsLoaded) {
@@ -146,15 +94,6 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
     } catch (error) {
       console.error('Error creating group:', error);
       throw error; // Re-throw to let the dialog handle it
-    }
-  };
-
-  const getMedalEmoji = (position: number) => {
-    switch (position) {
-      case 0: return '🥇';
-      case 1: return '🥈';
-      case 2: return '🥉';
-      default: return '';
     }
   };
 
@@ -218,40 +157,27 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
                   >
                     {!group.group_image ? group.name.charAt(0).toUpperCase() : null}
                   </Avatar>
-                  <Box sx={{ flex: 1 }}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="body2" fontWeight="medium" noWrap>
                       {group.name}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap>
+                    <Typography 
+                      variant="caption" 
+                      color="text.secondary" 
+                      sx={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: 1.2,
+                        maxHeight: '2.4em'
+                      }}
+                    >
                       {group.description}
                     </Typography>
                   </Box>
                 </Box>
-                
-                {/* Top 3 Users */}
-                {groupRankings[group.id] && groupRankings[group.id].length > 0 && (
-                  <Box sx={{ width: '100%', pl: 5 }}>
-                    {groupRankings[group.id].map((userStat, index) => (
-                      <Box key={userStat.user_id} sx={{ display: 'flex', alignItems: 'center', py: 0.25 }}>
-                        <Typography variant="caption" sx={{ mr: 0.5 }}>
-                          {getMedalEmoji(index)}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1 }}>
-                          {userStat.user_name}
-                        </Typography>
-                        <Chip 
-                          label={userStat.activity_count} 
-                          size="small" 
-                          sx={{ 
-                            height: 16, 
-                            fontSize: '0.625rem',
-                            '& .MuiChip-label': { px: 0.75 }
-                          }}
-                        />
-                      </Box>
-                    ))}
-                  </Box>
-                )}
               </ListItemButton>
             </ListItem>
             {groupIndex < groups.length - 1 && <Divider sx={{ my: 1 }} />}
