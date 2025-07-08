@@ -84,8 +84,7 @@ const UserDashboard: React.FC<UserDashboardProps> = () => {
       const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
       
-      // Get user's activities for the current month
-      const activities = await apiService.getUserFeedWithGroups(user.id);
+      const activities = await apiService.getUserActivities(user.id);
       
       // Filter activities for current month and count by date
       const activityMap = new Map<string, number>();
@@ -239,14 +238,14 @@ const UserDashboard: React.FC<UserDashboardProps> = () => {
   return (
     <Box 
       sx={{ 
-        width: 350, 
+        width: 400, 
         height: '100%',
         overflow: 'auto',
         p: 3 
       }}
     >
       {/* Activity Calendar */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper sx={{ p: 3, mb: 3}}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', mb: 0 }}>
           <Typography variant="h3" component="h2" sx={{mb: 2}}>
             Sequência de Atividades

@@ -179,7 +179,6 @@ const HomePage: React.FC = () => {
 
         {/* Conditional Content Based on Groups */}
         {(() => {
-          console.log('HomePage render: groupsLoaded =', groupsLoaded, 'userGroups.length =', userGroups.length);
           return groupsLoaded && userGroups.length === 0 ? (
             renderNoGroupsMessage()
           ) : groupsLoaded ? (

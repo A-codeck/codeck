@@ -94,7 +94,6 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
   const handleActivityAdded = () => {
     // Trigger a refresh by updating the refresh trigger
     setRefreshTrigger(prev => {
-      console.log('ActivityFeed: refreshTrigger updated from', prev, 'to', prev + 1);
       return prev + 1;
     });
   };

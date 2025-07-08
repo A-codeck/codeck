@@ -134,13 +134,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
         image: selectedImage,
       };
       
-      console.log('Creating activity with data:', {
-        ...activityData,
-        image: selectedImage.name // Don't log the full file object
-      });
-      
       const result = await apiService.createActivity(activityData);
-      console.log('Activity created successfully:', result);
       
       // Reset form
       setFormData({
@@ -153,7 +147,6 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
       setSelectedImage(null);
       setImagePreview(null);
       
-      console.log('Calling onActivityAdded callback');
       onActivityAdded();
       onClose();
     } catch (error: any) {
