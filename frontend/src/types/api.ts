@@ -42,6 +42,14 @@ export interface GroupMember {
   nickname?: string;
 }
 
+export interface GroupMemberWithUser {
+  user_id: string;
+  group_id: string;
+  nickname?: string;
+  user_name: string;
+  user_email: string;
+}
+
 export interface GroupInvite {
   invite_code: string;
   group_id: string;
@@ -125,7 +133,7 @@ export interface CommentsResponse {
 export interface GroupMembersResponse {
   group_id: string;
   member_count: number;
-  members: GroupMember[];
+  members: GroupMemberWithUser[];
 }
 
 // Extended types for frontend

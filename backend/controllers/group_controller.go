@@ -457,12 +457,30 @@ func (gc *GroupController) GetGroupMembers(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Enhance members with user information
+	var membersWithUsers []responses.GroupMemberWithUser
+	for _, member := range members {
+		user, userExists := gc.UserModel.GetUserByID(member.UserID)
+		if userExists {
+			memberWithUser := responses.GroupMemberWithUser{
+				UserID:    member.UserID,
+				GroupID:   member.GroupID,
+				Nickname:  member.Nickname,
+				UserName:  user.Name,
+				UserEmail: user.Email,
+			}
+			membersWithUsers = append(membersWithUsers, memberWithUser)
+		}
+	}
+
+	response := responses.GroupMembersWithUsersResponse{
+		GroupID:     groupID,
+		Members:     membersWithUsers,
+		MemberCount: len(membersWithUsers),
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"group_id":     groupID,
-		"members":      members,
-		"member_count": len(members),
-	})
+	json.NewEncoder(w).Encode(response)
 }
 
 // CreateInviteLink godoc

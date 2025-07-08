@@ -128,6 +128,12 @@ func (m *GormGroupModel) GetActiveInvites(groupID int) []GroupInvite {
 	return invites
 }
 
+func (m *GormGroupModel) GetAllInvites(groupID int) []GroupInvite {
+	var invites []GroupInvite
+	m.db.Where("group_id = ?", groupID).Find(&invites)
+	return invites
+}
+
 func (m *GormGroupModel) GetGroupActivities(groupID int) ([]string, bool) {
 	// This would require a join table or relation in a real schema
 	return []string{}, true // Placeholder

@@ -15,6 +15,7 @@ type GroupModel interface {
 	GetInviteByCode(inviteCode string) (GroupInvite, bool)
 	DeactivateInvite(inviteCode string) bool
 	GetActiveInvites(groupID int) []GroupInvite
+	GetAllInvites(groupID int) []GroupInvite
 	GetGroupActivities(groupID int) ([]string, bool)
 	GetUserGroups(userID int) []Group
 }

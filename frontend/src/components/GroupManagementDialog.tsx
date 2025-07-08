@@ -29,7 +29,7 @@ import {
   ExitToApp as ExitToAppIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
-import { Group, GroupMember, GroupInvite } from '../types/api';
+import { Group, GroupMemberWithUser, GroupInvite } from '../types/api';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -62,7 +62,7 @@ const GroupManagementDialog: React.FC<GroupManagementDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const [tabValue, setTabValue] = useState(0);
-  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [members, setMembers] = useState<GroupMemberWithUser[]>([]);
   const [invites, setInvites] = useState<GroupInvite[]>([]);
   const [emailToAdd, setEmailToAdd] = useState('');
   const [loading, setLoading] = useState(false);
@@ -255,8 +255,8 @@ const GroupManagementDialog: React.FC<GroupManagementDialogProps> = ({
               {members.map((member) => (
                 <ListItem key={member.user_id}>
                   <ListItemText
-                    primary={member.nickname || `User ${member.user_id}`}
-                    secondary={member.user_id === group.creator_id ? 'Owner' : 'Member'}
+                    primary={member.nickname || member.user_name}
+                    secondary={`${member.user_email} • ${member.user_id === group.creator_id ? 'Owner' : 'Member'}`}
                   />
                   {member.user_id === group.creator_id && (
                     <Chip label="Owner" color="primary" size="small" />
@@ -314,57 +314,82 @@ const GroupManagementDialog: React.FC<GroupManagementDialogProps> = ({
                 </Button>
               </Box>
               
-              {invites.length > 0 && (
+              {invites.length > 0 ? (
                 <List>
-                  {invites.filter(invite => invite.is_active).map((invite) => {
+                  {invites.map((invite) => {
                     const inviteUrl = `${window.location.origin}/join/${invite.invite_code}`;
+                    const isActive = invite.is_active;
                     return (
                       <ListItem key={invite.invite_code}>
-                        <Paper sx={{ p: 3, width: '100%' }}>
+                        <Paper sx={{ 
+                          p: 3, 
+                          width: '100%',
+                          opacity: isActive ? 1 : 0.6,
+                          border: isActive ? 'none' : '1px solid',
+                          borderColor: 'error.main'
+                        }}>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <Box sx={{ flex: 1, mr: 2 }}>
-                              <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Invite Code: {invite.invite_code}
-                              </Typography>
-                              <Typography variant="body2" sx={{ 
-                                fontFamily: 'monospace', 
-                                backgroundColor: 'grey.100', 
-                                p: 1, 
-                                borderRadius: 1,
-                                wordBreak: 'break-all',
-                                mb: 1
-                              }}>
-                                {inviteUrl}
-                              </Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                  Invite Code: {invite.invite_code}
+                                </Typography>
+                                {!isActive && (
+                                  <Chip label="Deleted" color="error" size="small" />
+                                )}
+                              </Box>
+                              {isActive && (
+                                <Typography variant="body2" sx={{ 
+                                  fontFamily: 'monospace', 
+                                  backgroundColor: 'grey.800', 
+                                  p: 1, 
+                                  borderRadius: 1,
+                                  wordBreak: 'break-all',
+                                  mb: 1
+                                }}>
+                                  {inviteUrl}
+                                </Typography>
+                              )}
                               <Typography variant="caption" color="text.secondary">
-                                Created: {new Date(invite.created_at).toLocaleDateString()} • Permanent Link
+                                Created: {new Date(invite.created_at).toLocaleDateString()} • {isActive ? 'Permanent Link' : 'Deleted Link'}
                               </Typography>
                             </Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                              <IconButton
-                                onClick={() => handleCopyInviteLink(invite.invite_code)}
-                                color="primary"
-                                size="small"
-                                title="Copy Link"
-                              >
-                                <ContentCopyIcon />
-                              </IconButton>
-                              <IconButton
-                                onClick={() => handleDeleteInvite(invite.invite_code)}
-                                color="error"
-                                size="small"
-                                title="Delete Link"
-                                disabled={loading}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Box>
+                            {isActive && (
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                <IconButton
+                                  onClick={() => handleCopyInviteLink(invite.invite_code)}
+                                  color="primary"
+                                  size="small"
+                                  title="Copy Link"
+                                >
+                                  <ContentCopyIcon />
+                                </IconButton>
+                                <IconButton
+                                  onClick={() => handleDeleteInvite(invite.invite_code)}
+                                  color="error"
+                                  size="small"
+                                  title="Delete Link"
+                                  disabled={loading}
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Box>
+                            )}
                           </Box>
                         </Paper>
                       </ListItem>
                     );
                   })}
                 </List>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    No invite links created yet
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Create an invite link above to allow others to join this group
+                  </Typography>
+                </Box>
               )}
             </TabPanel>
           )}
