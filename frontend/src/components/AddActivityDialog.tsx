@@ -180,13 +180,13 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
     >
       <DialogTitle>
         <Typography variant="h2">
-          Log Your Activity
+          Registrar Sua Atividade
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Share what you've accomplished today. You must select at least one group to share your activity with.
+          Compartilhe o que você conquistou hoje. Você deve selecionar pelo menos um grupo para compartilhar sua atividade.
         </Typography>
         <Typography variant="body2" color="primary" sx={{ fontWeight: 'medium' }}>
-          📅 Will be posted on: {new Date().toLocaleDateString('en-US', { 
+          📅 Será postado em: {new Date().toLocaleDateString('pt-BR', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
@@ -198,24 +198,24 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
           <TextField
             fullWidth
             name="title"
-            label="Activity Title"
+            label="Título da Atividade"
             value={formData.title}
             onChange={handleInputChange}
             required
             sx={{ mb: 2 }}
-            placeholder="e.g. Solved Leetcode Problem, Completed Algorithm Course"
+            placeholder="ex: Resolvi Problema no Leetcode, Completei Curso de Algoritmos"
           />
           
           <TextField
             fullWidth
             name="description"
-            label="Description"
+            label="Descrição"
             value={formData.description}
             onChange={handleInputChange}
             multiline
             rows={4}
             sx={{ mb: 2 }}
-            placeholder="Tell us more about what you did, what you learned, or any challenges you faced..."
+            placeholder="Conte mais sobre o que você fez, o que aprendeu, ou quais desafios enfrentou..."
           />
           
           <Box sx={{ mb: 2 }}>
@@ -225,7 +225,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
               fullWidth
               sx={{ mb: 1 }}
             >
-              {selectedImage ? 'Change Image' : 'Upload Image *'}
+              {selectedImage ? 'Alterar Imagem' : 'Fazer Upload da Imagem *'}
               <input
                 type="file"
                 hidden
@@ -235,7 +235,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
             </Button>
             {selectedImage && (
               <Typography variant="body2" color="text.secondary">
-                Selected: {selectedImage.name}
+                Selecionado: {selectedImage.name}
               </Typography>
             )}
             {imagePreview && (
@@ -254,12 +254,12 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
           </Box>
           
           <FormControl fullWidth sx={{ mb: 2 }} required error={formData.group_ids.length === 0}>
-            <InputLabel>Groups *</InputLabel>
+            <InputLabel>Grupos *</InputLabel>
             <Select
               multiple
               value={formData.group_ids}
               onChange={handleSelectChange}
-              input={<OutlinedInput label="Groups *" />}
+              input={<OutlinedInput label="Grupos *" />}
               disabled={groups.length === 0}
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -275,7 +275,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
               {groups.length === 0 ? (
                 <MenuItem disabled>
                   <Typography color="text.secondary">
-                    No groups available. Please create or join a group first.
+                    Nenhum grupo disponível. Por favor, crie ou entre em um grupo primeiro.
                   </Typography>
                 </MenuItem>
               ) : (
@@ -289,15 +289,15 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
             </Select>
             {groups.length === 0 ? (
               <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                You need to be part of at least one group to post activities
+                Você precisa fazer parte de pelo menos um grupo para postar atividades
               </Typography>
             ) : formData.group_ids.length === 0 ? (
               <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                Please select at least one group
+                Por favor, selecione pelo menos um grupo
               </Typography>
             ) : preselectedGroupId && formData.group_ids.includes(preselectedGroupId) ? (
               <Typography variant="caption" color="primary" sx={{ mt: 0.5, ml: 1.5 }}>
-                Current group is preselected. You can select additional groups if desired.
+                O grupo atual está pré-selecionado. Você pode selecionar grupos adicionais se desejar.
               </Typography>
             ) : null}
           </FormControl>
@@ -306,7 +306,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
       
       <DialogActions sx={{ p: 3 }}>
         <Button onClick={handleClose} disabled={loading}>
-          Cancel
+          Cancelar
         </Button>
         <Button
           onClick={handleSubmit}
@@ -314,7 +314,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
           color="secondary"
           disabled={loading || !formData.title || !selectedImage || formData.group_ids.length === 0 || groups.length === 0}
         >
-          {loading ? 'Posting...' : 'Post Activity'}
+          {loading ? 'Postando...' : 'Postar Atividade'}
         </Button>
       </DialogActions>
     </Dialog>

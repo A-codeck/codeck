@@ -92,19 +92,19 @@ const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
       <DialogTitle>
         <Box display="flex" alignItems="center" gap={1}>
           <GroupIcon color="primary" />
-          <Typography variant="h6">Join a Group</Typography>
+          <Typography variant="h6">Entrar em um Grupo</Typography>
         </Box>
       </DialogTitle>
 
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Enter an invite link or invite code to join a group. You can get these from group owners.
+          Digite um link de convite ou código de convite para entrar em um grupo. Você pode obtê-los dos donos do grupo.
         </Typography>
 
         <TextField
           fullWidth
-          label="Invite Link or Code"
-          placeholder="https://example.com/join/ABC123 or ABC123"
+          label="Link ou Código de Convite"
+          placeholder="https://example.com/join/ABC123 ou ABC123"
           value={inviteLink}
           onChange={(e) => {
             setInviteLink(e.target.value);
@@ -131,7 +131,7 @@ const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
 
       <DialogActions>
         <Button onClick={handleClose} disabled={loading}>
-          Cancel
+          Cancelar
         </Button>
         <Button
           variant="contained"
@@ -139,7 +139,7 @@ const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
           disabled={!inviteLink.trim() || loading}
           startIcon={loading ? <CircularProgress size={20} /> : <GroupIcon />}
         >
-          {loading ? 'Joining...' : 'Join Group'}
+          {loading ? 'Entrando...' : 'Entrar no Grupo'}
         </Button>
       </DialogActions>
     </Dialog>

@@ -97,7 +97,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onToggleMode, isRegisterMode }) =
             </Typography>
 
             <Typography variant="h2" align="center" gutterBottom>
-              {isRegisterMode ? 'Create Account' : 'Sign In'}
+              {isRegisterMode ? 'Criar Conta' : 'Entrar'}
             </Typography>
 
             {error && (
@@ -111,7 +111,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onToggleMode, isRegisterMode }) =
                 <TextField
                   fullWidth
                   name="name"
-                  label="Full Name"
+                  label="Nome Completo"
                   value={formData.name}
                   onChange={handleChange}
                   required
@@ -133,7 +133,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onToggleMode, isRegisterMode }) =
               <TextField
                 fullWidth
                 name="password"
-                label="Password"
+                label="Senha"
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -150,8 +150,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onToggleMode, isRegisterMode }) =
                 sx={{ mb: 2 }}
               >
                 {loading 
-                  ? (isRegisterMode ? 'Creating Account...' : 'Signing In...') 
-                  : (isRegisterMode ? 'Create Account' : 'Sign In')
+                  ? (isRegisterMode ? 'Criando Conta...' : 'Entrando...') 
+                  : (isRegisterMode ? 'Criar Conta' : 'Entrar')
                 }
               </Button>
 
@@ -159,7 +159,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onToggleMode, isRegisterMode }) =
 
               <Box textAlign="center">
                 <Typography variant="body2" color="text.secondary">
-                  {isRegisterMode ? 'Already have an account?' : "Don't have an account?"}
+                  {isRegisterMode ? 'Já tem uma conta?' : "Não tem uma conta?"}
                   {' '}
                   <Link
                     component="button"
@@ -173,7 +173,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onToggleMode, isRegisterMode }) =
                       },
                     }}
                   >
-                    {isRegisterMode ? 'Sign In' : 'Create Account'}
+                    {isRegisterMode ? 'Entrar' : 'Criar Conta'}
                   </Link>
                 </Typography>
               </Box>

@@ -36,38 +36,38 @@ const UserDashboard: React.FC<UserDashboardProps> = () => {
   const problemSites = [
     {
       name: 'LeetCode',
-      description: 'Popular platform with coding interview questions and algorithm challenges. Great for preparing for technical interviews.',
+      description: 'Plataforma popular com questões de entrevistas de programação e desafios de algoritmos. Ótima para se preparar para entrevistas técnicas.',
       url: 'https://leetcode.com',
-      difficulty: 'Beginner to Advanced',
-      focus: 'Interview Prep, Algorithms'
+      difficulty: 'Iniciante a Avançado',
+      focus: 'Preparação para Entrevistas, Algoritmos'
     },
     {
       name: 'HackerRank',
-      description: 'Comprehensive coding challenges covering algorithms, data structures, and domain-specific problems.',
+      description: 'Desafios abrangentes de programação cobrindo algoritmos, estruturas de dados e problemas específicos de domínio.',
       url: 'https://hackerrank.com',
-      difficulty: 'Beginner to Advanced', 
-      focus: 'Algorithms, Data Structures'
+      difficulty: 'Iniciante a Avançado', 
+      focus: 'Algoritmos, Estruturas de Dados'
     },
     {
       name: 'Codeforces',
-      description: 'Competitive programming platform with regular contests and a vast archive of algorithmic problems.',
+      description: 'Plataforma de programação competitiva com concursos regulares e um vasto arquivo de problemas algorítmicos.',
       url: 'https://codeforces.com',
-      difficulty: 'Intermediate to Expert',
-      focus: 'Competitive Programming'
+      difficulty: 'Intermediário a Especialista',
+      focus: 'Programação Competitiva'
     },
     {
       name: 'AtCoder',
-      description: 'Japanese competitive programming platform known for high-quality problems and beginner-friendly contests.',
+      description: 'Plataforma japonesa de programação competitiva conhecida por problemas de alta qualidade e concursos amigáveis para iniciantes.',
       url: 'https://atcoder.jp',
-      difficulty: 'Beginner to Expert',
-      focus: 'Competitive Programming'
+      difficulty: 'Iniciante a Especialista',
+      focus: 'Programação Competitiva'
     },
     {
       name: 'CodeChef',
-      description: 'Global competitive programming platform with monthly contests and practice problems.',
+      description: 'Plataforma global de programação competitiva com concursos mensais e problemas práticos.',
       url: 'https://codechef.com',
-      difficulty: 'Beginner to Advanced',
-      focus: 'Competitive Programming'
+      difficulty: 'Iniciante a Avançado',
+      focus: 'Programação Competitiva'
     }
   ];
 
@@ -249,14 +249,14 @@ const UserDashboard: React.FC<UserDashboardProps> = () => {
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', mb: 0 }}>
           <Typography variant="h3" component="h2" sx={{mb: 2}}>
-            Activity Streak
+            Sequência de Atividades
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton onClick={() => navigateMonth('prev')} size="small">
               <ChevronLeft />
             </IconButton>
             <Typography variant="body1" sx={{ minWidth: 120, textAlign: 'center' }}>
-              {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
             </Typography>
             <IconButton onClick={() => navigateMonth('next')} size="small">
               <ChevronRight />
@@ -269,11 +269,11 @@ const UserDashboard: React.FC<UserDashboardProps> = () => {
         <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Box sx={{ width: 12, height: 12, backgroundColor: 'success.main', borderRadius: 1 }} />
-            <Typography variant="caption">Activity</Typography>
+            <Typography variant="caption">Atividade</Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Box sx={{ width: 12, height: 12, backgroundColor: 'action.hover', borderRadius: 1 }} />
-            <Typography variant="caption">No Activity</Typography>
+            <Typography variant="caption">Sem Atividade</Typography>
           </Box>
         </Box>
       </Paper>
@@ -283,10 +283,10 @@ const UserDashboard: React.FC<UserDashboardProps> = () => {
       {/* Programming Problem Sites */}
       <Paper sx={{ p: 3 }}>
         <Typography variant="h3" component="h2" gutterBottom>
-          Problem Solving Sites
+          Sites de Resolução de Problemas
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Discover new programming challenges to improve your skills
+          Descubra novos desafios de programação para melhorar suas habilidades
         </Typography>
 
         {problemSites.map((site, index) => (

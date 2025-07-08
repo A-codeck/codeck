@@ -176,7 +176,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
             size="small"
             variant="text"
           >
-            See comments
+            Ver comentários
           </Button>
         </Box>
 
@@ -191,7 +191,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
                 {user?.name?.charAt(0)}
               </Avatar>
               <TextField
-                placeholder="Add a comment..."
+                placeholder="Adicionar um comentário..."
                 variant="outlined"
                 size="small"
                 fullWidth
@@ -216,7 +216,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
             {/* Comments List */}
             {loading ? (
               <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                Loading comments...
+                Carregando comentários...
               </Typography>
             ) : (
               <List sx={{ maxHeight: 300, overflow: 'auto' }}>
@@ -231,7 +231,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
                       primary={
                         <Box>
                           <Typography variant="body2" component="span" fontWeight={600}>
-                            {comment.user_name || 'Unknown User'}
+                            {comment.user_name || 'Usuário Desconhecido'}
                           </Typography>
                           <Typography variant="body2" component="span" sx={{ ml: 1 }}>
                             {comment.content}
@@ -248,7 +248,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
                 ))}
                 {(!comments || comments.length === 0) && (
                   <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                    No comments yet. Be the first to comment!
+                    Nenhum comentário ainda. Seja o primeiro a comentar!
                   </Typography>
                 )}
               </List>

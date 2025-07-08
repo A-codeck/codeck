@@ -131,7 +131,7 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
     >
       <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
         <Typography variant="h3" gutterBottom>
-          Group Ranking
+          Ranking do Grupo
         </Typography>
         {group && (
           <Typography variant="body2" color="text.secondary">
@@ -197,7 +197,7 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
                         </Typography>
                         {isCurrentUser && (
                           <Chip 
-                            label="You" 
+                            label="Você" 
                             size="small" 
                             color="secondary" 
                             variant="outlined"
@@ -207,7 +207,7 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
                     }
                     secondary={
                       <Typography variant="caption" color="text.secondary">
-                        {userStat.activity_count} activities
+                        {userStat.activity_count} atividades
                       </Typography>
                     }
                   />
@@ -218,7 +218,7 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
         ) : (
           <Box sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
-              No members found
+              Nenhum membro encontrado
             </Typography>
           </Box>
         )}

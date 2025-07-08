@@ -138,8 +138,8 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
               <HomeIcon />
             </Avatar>
             <ListItemText 
-              primary="Home" 
-              secondary="See all activities"
+              primary="Início" 
+              secondary="Ver todas as atividades"
               primaryTypographyProps={{
                 variant: 'body2',
                 fontWeight: 'medium',
@@ -155,7 +155,7 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
 
         {/* Groups Section */}
         <Typography variant="caption" color="text.secondary" sx={{ px: 1, mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 1 }}>
-          Groups
+          Grupos
         </Typography>
 
         {groups.map((group, groupIndex) => (
@@ -184,7 +184,7 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
                   </Box>
                   {/* Show manage button for group owners */}
                   {user && group.creator_id === user.id && (
-                    <Tooltip title="Manage Group">
+                    <Tooltip title="Gerenciar Grupo">
                       <IconButton
                         size="small"
                         onClick={(event) => handleManageGroup(group, event)}
@@ -204,10 +204,10 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
         {groups.length === 0 && !loading && (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              No groups yet
+              Nenhum grupo ainda
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Create your first group to get started
+              Crie seu primeiro grupo para começar
             </Typography>
           </Box>
         )}
@@ -223,7 +223,7 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
           onClick={() => setCreateDialogOpen(true)}
           sx={{ borderRadius: 1 }}
         >
-          Add Group
+          Adicionar Grupo
         </Button>
       </Box>
 
