@@ -14,8 +14,10 @@ func RegisterGroupRoutes(r *mux.Router, groupController *controllers.GroupContro
 	r.HandleFunc("/groups/{id}/members", groupController.GetGroupMembers).Methods("GET")
 	r.HandleFunc("/groups/{id}/members", groupController.AddUserToGroup).Methods("POST")
 	r.HandleFunc("/groups/{id}/members", groupController.RemoveUserFromGroup).Methods("DELETE")
+	r.HandleFunc("/groups/{id}/members/email", groupController.AddUserToGroupByEmail).Methods("POST")
 	r.HandleFunc("/groups/{id}/members/nickname", groupController.SetUserNickname).Methods("PUT")
 	r.HandleFunc("/groups/{id}/members/nickname", groupController.DeleteUserNickname).Methods("DELETE")
+	r.HandleFunc("/groups/{id}/leave", groupController.LeaveGroup).Methods("POST")
 	r.HandleFunc("/groups/{id}/activities", groupController.GetGroupActivities).Methods("GET")
 	r.HandleFunc("/groups/{id}/invites", groupController.CreateInviteLink).Methods("POST")
 	r.HandleFunc("/groups/{id}/invites", groupController.GetGroupInvites).Methods("GET")
@@ -26,6 +28,7 @@ func RegisterGroupRoutes(r *mux.Router, groupController *controllers.GroupContro
 func RegisterActivityRoutes(r *mux.Router, activityController *controllers.ActivityController) {
 	r.HandleFunc("/activities", activityController.CreateActivity).Methods("POST")
 	r.HandleFunc("/activities/feed", activityController.GetUserFeed).Methods("GET")
+	r.HandleFunc("/activities/feed-with-groups", activityController.GetUserFeedWithGroups).Methods("GET")
 	r.HandleFunc("/activities/{id}", activityController.GetActivity).Methods("GET")
 	r.HandleFunc("/activities/{id}", activityController.UpdateActivity).Methods("PUT")
 	r.HandleFunc("/activities/{id}", activityController.DeleteActivity).Methods("DELETE")

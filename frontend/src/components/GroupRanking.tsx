@@ -28,7 +28,6 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
 
   useEffect(() => {
     loadGroupRanking();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId, user]);
 
   const loadGroupRanking = async () => {
@@ -51,12 +50,24 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
         try {
           const memberActivities = await apiService.getUserActivities(member.user_id);
           const memberInfo = await apiService.getUser(member.user_id);
-          
+
+          var activity_count = 0
+          var actGroupId = '';
+          for (const activity of memberActivities) {
+            if (!activity || !activity.group_ids) continue;
+            for(actGroupId of activity.group_ids) {
+              if (actGroupId === groupId) {
+                activity_count++;
+                break;
+              }
+            }
+          }
           userStats.push({
             user_id: member.user_id,
             user_name: member.nickname || memberInfo.name,
-            activity_count: memberActivities.length,
+            activity_count: activity_count,
           });
+          
         } catch (error) {
           console.error(`Error loading data for user ${member.user_id}:`, error);
         }
@@ -132,7 +143,7 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
     >
       <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
         <Typography variant="h3" gutterBottom>
-          Group Ranking
+          Ranking do Grupo
         </Typography>
         {group && (
           <Typography variant="body2" color="text.secondary">
@@ -198,7 +209,7 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
                         </Typography>
                         {isCurrentUser && (
                           <Chip 
-                            label="You" 
+                            label="Você" 
                             size="small" 
                             color="secondary" 
                             variant="outlined"
@@ -208,7 +219,7 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
                     }
                     secondary={
                       <Typography variant="caption" color="text.secondary">
-                        {userStat.activity_count} activities
+                        {userStat.activity_count} atividades
                       </Typography>
                     }
                   />
@@ -219,7 +230,7 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
         ) : (
           <Box sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
-              No members found
+              Nenhum membro encontrado
             </Typography>
           </Box>
         )}

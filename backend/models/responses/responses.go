@@ -33,13 +33,11 @@ type LoginResponse struct {
 
 type GroupCreateRequest struct {
 	Name        string  `json:"name" example:"Study Group"`
-	EndDate     string  `json:"end_date" example:"2025-12-31"`
-	GroupImage  *string `json:"group_image,omitempty" example:"https://example.com/image.jpg"`
+	GroupImage  *string `json:"group_image,omitempty" example:"https://example.com/image.jpg"` // Optional
 	Description *string `json:"description,omitempty" example:"A group for studying algorithms"`
 }
 
 type GroupUpdateRequest struct {
-	EndDate     *string `json:"end_date,omitempty" example:"2025-12-31"`
 	GroupImage  *string `json:"group_image,omitempty" example:"https://example.com/image.jpg"`
 	Description *string `json:"description,omitempty" example:"Updated description"`
 }
@@ -52,9 +50,18 @@ type AddUserToGroupRequest struct {
 	UserID int `json:"user_id" example:"1"`
 }
 
+type AddUserByEmailRequest struct {
+	Email       string `json:"email" example:"user@example.com"`
+	RequesterID int    `json:"requester_id" example:"1"`
+}
+
 type RemoveUserFromGroupRequest struct {
 	UserID      int `json:"user_id" example:"1"`
 	RequesterID int `json:"requester_id" example:"2"`
+}
+
+type LeaveGroupRequest struct {
+	UserID int `json:"user_id" example:"1"`
 }
 
 type AddUserToGroupResponse struct {
@@ -69,10 +76,24 @@ type GroupMembersResponse struct {
 	MemberCount int                 `json:"member_count" example:"3"`
 }
 
+type GroupMemberWithUser struct {
+	UserID    int     `json:"user_id" example:"1"`
+	GroupID   int     `json:"group_id" example:"1"`
+	Nickname  *string `json:"nickname,omitempty" example:"Cool Coder"`
+	UserName  string  `json:"user_name" example:"John Doe"`
+	UserEmail string  `json:"user_email" example:"john@example.com"`
+}
+
+type GroupMembersWithUsersResponse struct {
+	GroupID     int                   `json:"group_id" example:"1"`
+	Members     []GroupMemberWithUser `json:"members"`
+	MemberCount int                   `json:"member_count" example:"3"`
+}
+
 type GroupActivitiesResponse struct {
-	GroupID        int                `json:"group_id" example:"1"`
-	Activities     []activity.Activity `json:"activities"`
-	ActivityCount  int                `json:"activity_count" example:"5"`
+	GroupID       int                 `json:"group_id" example:"1"`
+	Activities    []activity.Activity `json:"activities"`
+	ActivityCount int                 `json:"activity_count" example:"5"`
 }
 
 type CreateInviteRequest struct {
@@ -100,12 +121,12 @@ type DeleteNicknameRequest struct {
 }
 
 type ActivityCreateRequest struct {
-	CreatorID     int     `json:"creator_id" example:"1"`
-	GroupID       int     `json:"group_id" example:"1"`
-	Title         string  `json:"title" example:"Algorithm Contest"`
-	Date          string  `json:"date" example:"2025-12-31"`
-	ActivityImage *string `json:"activity_image,omitempty" example:"https://example.com/image.jpg"`
-	Description   *string `json:"description,omitempty" example:"A competitive programming contest"`
+	CreatorID   int    `json:"creator_id" example:"1"`
+	GroupID     int    `json:"group_id" example:"1"`
+	Title       string `json:"title" example:"Algorithm Contest"`
+	Date        string `json:"date" example:"2025-12-31"`
+	Description string `json:"description,omitempty" example:"A competitive programming contest"`
+	// Note: Image file is handled as multipart form data, not JSON
 }
 
 type ActivityUpdateRequest struct {
@@ -136,4 +157,21 @@ type CommentsResponse struct {
 type CommentDeleteResponse struct {
 	Message   string `json:"message" example:"Comment deleted successfully"`
 	CommentID int    `json:"comment_id" example:"1"`
+}
+
+// Enhanced comment structure with user information
+type CommentWithUser struct {
+	ID         int    `json:"id"`
+	Content    string `json:"content"`
+	UserID     int    `json:"user_id"`
+	ActivityID int    `json:"activity_id"`
+	CreatedAt  string `json:"created_at"`
+	UserName   string `json:"user_name"`
+	UserEmail  string `json:"user_email"`
+}
+
+type CommentsWithUsersResponse struct {
+	ActivityID   int               `json:"activity_id" example:"1"`
+	Comments     []CommentWithUser `json:"comments"`
+	CommentCount int               `json:"comment_count" example:"5"`
 }

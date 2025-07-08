@@ -2,6 +2,7 @@ import axios from 'axios';
 import type {
   User,
   Activity,
+  ActivityWithGroups,
   Group,
   Comment,
   LoginRequest,
@@ -11,7 +12,9 @@ import type {
   GroupCreateRequest,
   CommentCreateRequest,
   CommentsResponse,
+  CommentsWithUsersResponse,
   GroupMembersResponse,
+  GroupActivitiesResponse,
   GroupInvite,
 } from '../types/api';
 
@@ -34,6 +37,12 @@ class ApiService {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      
+      // If the data is FormData, remove the default Content-Type to let browser set it
+      if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+      }
+      
       return config;
     });
   }
@@ -67,12 +76,28 @@ class ApiService {
 
   // Activity endpoints
   async createActivity(activityData: ActivityCreateRequest): Promise<Activity> {
-    const response = await this.api.post<Activity>('/activities', activityData);
+    const formData = new FormData();
+    formData.append('title', activityData.title);
+    formData.append('description', activityData.description);
+    formData.append('date', activityData.date);
+    formData.append('creator_id', activityData.creator_id);
+    formData.append('image', activityData.image);
+    
+    // Join group IDs with comma
+    formData.append('group_ids', activityData.group_ids.join(','));
+
+    // Don't set Content-Type header - let the browser set it automatically with boundary
+    const response = await this.api.post<Activity>('/activities', formData);
     return response.data;
   }
 
   async getUserFeed(userId: string): Promise<Activity[]> {
     const response = await this.api.get<Activity[]>(`/activities/feed?user_id=${userId}`);
+    return response.data;
+  }
+
+  async getUserFeedWithGroups(userId: string): Promise<ActivityWithGroups[]> {
+    const response = await this.api.get<ActivityWithGroups[]>(`/activities/feed-with-groups?user_id=${userId}`);
     return response.data;
   }
 
@@ -94,7 +119,17 @@ class ApiService {
 
   // Group endpoints
   async createGroup(groupData: GroupCreateRequest): Promise<Group> {
-    const response = await this.api.post<Group>('/groups', groupData);
+    const formData = new FormData();
+    formData.append('name', groupData.name);
+    formData.append('description', groupData.description);
+    formData.append('creator_id', groupData.creator_id);
+    
+    // Only append image if it's provided
+    if (groupData.image) {
+      formData.append('image', groupData.image);
+    }
+
+    const response = await this.api.post<Group>('/groups', formData);
     return response.data;
   }
 
@@ -115,8 +150,8 @@ class ApiService {
   }
 
   async getGroupActivities(groupId: string, requesterId: string): Promise<Activity[]> {
-    const response = await this.api.get<Activity[]>(`/groups/${groupId}/activities?requester_id=${requesterId}`);
-    return response.data;
+    const response = await this.api.get<GroupActivitiesResponse>(`/groups/${groupId}/activities?requester_id=${requesterId}`);
+    return response.data.activities;
   }
 
   async getGroupMembers(groupId: string, requesterId: string): Promise<GroupMembersResponse> {
@@ -128,32 +163,44 @@ class ApiService {
     await this.api.post(`/groups/${groupId}/members`, { user_id: userId });
   }
 
-  async removeUserFromGroup(groupId: string, userId: string, requesterId: string): Promise<void> {
-    await this.api.delete(`/groups/${groupId}/members`, {
-      data: { user_id: userId, requester_id: requesterId }
+  async addUserToGroupByEmail(groupId: string, email: string, requesterId: string): Promise<void> {
+    await this.api.post(`/groups/${groupId}/members/email`, { 
+      email: email, 
+      requester_id: requesterId 
     });
   }
 
-  async createGroupInvite(groupId: string, creatorId: string, expiresAt: string): Promise<GroupInvite> {
+  async leaveGroup(groupId: string, userId: string): Promise<{ group_deleted: boolean }> {
+    const response = await this.api.post(`/groups/${groupId}/leave`, { user_id: userId });
+    return response.data;
+  }
+
+  async createGroupInvite(groupId: string, creatorId: string, expiresAt?: string): Promise<GroupInvite> {
     const response = await this.api.post<GroupInvite>(`/groups/${groupId}/invites`, {
       creator_id: creatorId,
-      expires_at: expiresAt
+      expires_at: expiresAt || null // null for permanent invite
     });
     return response.data;
   }
 
   async getGroupInvites(groupId: string): Promise<GroupInvite[]> {
-    const response = await this.api.get<GroupInvite[]>(`/groups/${groupId}/invites`);
-    return response.data;
+    const response = await this.api.get<{invites: GroupInvite[]}>(`/groups/${groupId}/invites`);
+    return response.data.invites;
   }
 
   async joinGroupByInvite(inviteCode: string, userId: string): Promise<void> {
     await this.api.post(`/invites/${inviteCode}/join`, { user_id: userId });
   }
 
+  async deactivateInvite(inviteCode: string, requesterId: string): Promise<void> {
+    await this.api.delete(`/invites/${inviteCode}/deactivate`, {
+      data: { requester_id: requesterId }
+    });
+  }
+
   // Comment endpoints
-  async getActivityComments(activityId: string): Promise<CommentsResponse> {
-    const response = await this.api.get<CommentsResponse>(`/activities/${activityId}/comments`);
+  async getActivityComments(activityId: string): Promise<CommentsWithUsersResponse> {
+    const response = await this.api.get<CommentsWithUsersResponse>(`/activities/${activityId}/comments`);
     return response.data;
   }
 

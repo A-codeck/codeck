@@ -22,12 +22,12 @@ import {
   Comment as CommentIcon,
   Send as SendIcon,
 } from '@mui/icons-material';
-import { ActivityWithGroup, Comment, User } from '../types/api';
+import { ActivityWithGroup, ActivityWithGroups, Comment, User } from '../types/api';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 
 interface ActivityCardProps {
-  activity: ActivityWithGroup;
+  activity: ActivityWithGroup | ActivityWithGroups;
   showGroupTag?: boolean;
 }
 
@@ -60,9 +60,10 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
     try {
       setLoading(true);
       const commentsData = await apiService.getActivityComments(activity.id);
-      setComments(commentsData.comments);
+      setComments(commentsData.comments || []);
     } catch (error) {
       console.error('Error loading comments:', error);
+      setComments([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -83,8 +84,9 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
         content: newComment.trim(),
         user_id: user.id,
       });
-      setComments([...comments, comment]);
+      setComments([...(comments || []), comment]);
       setNewComment('');
+      loadComments();
     } catch (error) {
       console.error('Error adding comment:', error);
     }
@@ -114,13 +116,31 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
               {formatDate(activity.date)}
             </Typography>
           </Box>
-          {showGroupTag && activity.group && (
-            <Chip
-              label={activity.group.name}
-              size="small"
-              variant="outlined"
-              color="secondary"
-            />
+          {showGroupTag && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {'group_names' in activity && activity.group_names ? (
+                // New format with multiple group names
+                activity.group_names.map((groupName, index) => (
+                  <Chip
+                    key={index}
+                    label={groupName}
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                  />
+                ))
+              ) : (
+                // Legacy format with single group
+                'group' in activity && activity.group && (
+                  <Chip
+                    label={activity.group.name}
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                  />
+                )
+              )}
+            </Box>
           )}
         </Box>
 
@@ -136,7 +156,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
         {activity.activity_image && (
           <Box
             component="img"
-            src={activity.activity_image}
+            src={activity.activity_image.startsWith('http') ? activity.activity_image : `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}${activity.activity_image}`}
             alt={activity.title}
             sx={{
               width: '100%',
@@ -157,7 +177,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
             size="small"
             variant="text"
           >
-            {comments.length} Comments
+            Ver comentários
           </Button>
         </Box>
 
@@ -172,7 +192,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
                 {user?.name?.charAt(0)}
               </Avatar>
               <TextField
-                placeholder="Add a comment..."
+                placeholder="Adicionar um comentário..."
                 variant="outlined"
                 size="small"
                 fullWidth
@@ -197,23 +217,27 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
             {/* Comments List */}
             {loading ? (
               <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                Loading comments...
+                Carregando comentários...
               </Typography>
             ) : (
               <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-                {comments.map((comment) => (
+                {(comments || []).map((comment) => (
                   <ListItem key={comment.id} alignItems="flex-start" sx={{ px: 0 }}>
                     <ListItemAvatar>
                       <Avatar sx={{ width: 32, height: 32 }}>
-                        {/* TODO: Get user name from comment.user_id */}
-                        U
+                        {comment.user_name?.charAt(0) || 'U'}
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
                       primary={
-                        <Typography variant="body2">
-                          {comment.content}
-                        </Typography>
+                        <Box>
+                          <Typography variant="body2" component="span" fontWeight={600}>
+                            {comment.user_name || 'Usuário Desconhecido'}
+                          </Typography>
+                          <Typography variant="body2" component="span" sx={{ ml: 1 }}>
+                            {comment.content}
+                          </Typography>
+                        </Box>
                       }
                       secondary={
                         <Typography variant="caption" color="text.secondary">
@@ -223,9 +247,9 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
                     />
                   </ListItem>
                 ))}
-                {comments.length === 0 && (
+                {(!comments || comments.length === 0) && (
                   <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                    No comments yet. Be the first to comment!
+                    Nenhum comentário ainda. Seja o primeiro a comentar!
                   </Typography>
                 )}
               </List>

@@ -8,7 +8,7 @@ import {
   Alert,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { ActivityWithGroup } from '../types/api';
+import { ActivityWithGroups, ActivityWithGroup } from '../types/api';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import ActivityCard from './ActivityCard';
@@ -20,63 +20,96 @@ interface ActivityFeedProps {
 
 const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
   const { user } = useAuth();
-  const [activities, setActivities] = useState<ActivityWithGroup[]>([]);
+  const [activities, setActivities] = useState<(ActivityWithGroup | ActivityWithGroups)[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     loadActivities();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedGroupId, user]);
+  }, [selectedGroupId, user, refreshTrigger]);
 
   const loadActivities = async () => {
     if (!user) return;
 
     try {
       setLoading(true);
-      setError('');
+      setError(''); // Clear any previous errors
       
-      let activitiesData: ActivityWithGroup[] = [];
+      let activitiesData: (ActivityWithGroup | ActivityWithGroups)[] = [];
 
       if (selectedGroupId) {
         // Load activities for specific group
         const groupActivities = await apiService.getGroupActivities(selectedGroupId, user.id);
         activitiesData = groupActivities.map(activity => ({ ...activity }));
       } else {
-        // Load user's feed from all groups
-        const feedActivities = await apiService.getUserFeed(user.id);
-        activitiesData = feedActivities.map(activity => ({ ...activity }));
+        // Load user's feed from all groups with group information
+        const feedActivities = await apiService.getUserFeedWithGroups(user.id);
+        activitiesData = feedActivities;
       }
 
-      // Sort by date (newest first)
-      activitiesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      // Sort by created_at timestamp (newest first)
+      activitiesData.sort((a, b) => {
+        // Primary sort: by created_at timestamp if available
+        if (a.created_at && b.created_at) {
+          const createdAtA = new Date(a.created_at).getTime();
+          const createdAtB = new Date(b.created_at).getTime();
+          if (createdAtA !== createdAtB) {
+            return createdAtB - createdAtA;
+          }
+        }
+        
+        // Fallback sort: by date if created_at is not available or equal
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA;
+      });
       
       setActivities(activitiesData);
+      setError(''); // Clear error on successful load
     } catch (err: any) {
       console.error('Error loading activities:', err);
-      setError('Failed to load activities');
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to load activities';
+      if (err.response?.status === 403) {
+        errorMessage = 'You do not have permission to view this group\'s activities';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Group not found or you are not a member';
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      }
+      
+      setError(errorMessage);
+      setActivities([]); // Clear activities on error
     } finally {
       setLoading(false);
     }
   };
 
   const handleActivityAdded = () => {
-    loadActivities();
+    // Trigger a refresh by updating the refresh trigger
+    setRefreshTrigger(prev => {
+      return prev + 1;
+    });
   };
 
   const getFeedTitle = () => {
     if (selectedGroupId) {
-      return 'Group Activities';
+      return 'Atividades do Grupo';
     }
-    return 'Activity Feed';
+    return 'Feed de Atividades';
   };
 
   const getFeedSubtitle = () => {
     if (selectedGroupId) {
-      return 'Activities from this group';
+      return 'Atividades deste grupo';
     }
-    return 'Activities from all your groups';
+    return 'Atividades de todos os seus grupos';
   };
 
   if (loading) {
@@ -96,7 +129,13 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
   }
 
   return (
-    <Box sx={{ flex: 1, p: 3 }}>
+    <Box 
+      sx={{ 
+        flex: 1, 
+        overflow: 'auto',
+        p: 3
+      }}
+    >
       {/* Header */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -115,14 +154,14 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
             onClick={() => setAddDialogOpen(true)}
             size="large"
           >
-            Log Activity
+            Registrar Atividade
           </Button>
         </Box>
       </Paper>
 
       {/* Error State */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 3, backgroundColor: (theme) => theme.palette.background.default }}>
           {error}
         </Alert>
       )}
@@ -140,12 +179,12 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
         ) : (
           <Paper sx={{ p: 4, textAlign: 'center' }}>
             <Typography variant="h3" color="text.secondary" gutterBottom>
-              No activities yet
+              Nenhuma atividade ainda
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
               {selectedGroupId 
-                ? 'No activities have been posted in this group yet.'
-                : 'Start by logging your first coding activity!'
+                ? 'Nenhuma atividade foi postada neste grupo ainda.'
+                : 'Comece registrando sua primeira atividade de programação!'
               }
             </Typography>
             <Button
@@ -154,7 +193,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
               startIcon={<AddIcon />}
               onClick={() => setAddDialogOpen(true)}
             >
-              Log Your First Activity
+              Registrar Sua Primeira Atividade
             </Button>
           </Paper>
         )}
@@ -165,6 +204,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
         open={addDialogOpen}
         onClose={() => setAddDialogOpen(false)}
         onActivityAdded={handleActivityAdded}
+        preselectedGroupId={selectedGroupId}
       />
     </Box>
   );

@@ -45,6 +45,22 @@ npm run dev
 
 Visit `http://localhost:5173` to use the application!
 
+### Testing
+
+Run the backend tests using Docker for complete isolation:
+
+```bash
+cd backend
+docker-compose -f docker-compose.test.yml run --rm test_runner
+```
+
+This will automatically:
+- Start a clean test database container
+- Run all tests with isolated test data  
+- Clean up containers when done
+
+See [backend/TESTING.md](backend/TESTING.md) for detailed testing documentation.
+
 # Banco de dados
 Utilizamos PostgreSQL para o banco de dados. 
 ## Diagrama de tabelas

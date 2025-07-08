@@ -12,8 +12,39 @@ definitions:
         type: string
       description:
         type: string
-      group_id:
+      group_ids:
+        description: Many-to-many relationship with groups
+        items:
+          type: integer
+        type: array
+      id:
         type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  activity.ActivityWithGroups:
+    properties:
+      activity_image:
+        type: string
+      created_at:
+        type: string
+      creator_id:
+        type: integer
+      date:
+        type: string
+      description:
+        type: string
+      group_ids:
+        description: Many-to-many relationship with groups
+        items:
+          type: integer
+        type: array
+      group_names:
+        items:
+          type: string
+        type: array
       id:
         type: integer
       title:
@@ -44,15 +75,11 @@ definitions:
         type: integer
       description:
         type: string
-      end_date:
-        type: string
       group_image:
         type: string
       id:
         type: integer
       name:
-        type: string
-      start_date:
         type: string
       updated_at:
         type: string
@@ -80,27 +107,6 @@ definitions:
         type: string
       user_id:
         type: integer
-    type: object
-  responses.ActivityCreateRequest:
-    properties:
-      activity_image:
-        example: https://example.com/image.jpg
-        type: string
-      creator_id:
-        example: 1
-        type: integer
-      date:
-        example: "2025-12-31"
-        type: string
-      description:
-        example: A competitive programming contest
-        type: string
-      group_id:
-        example: 1
-        type: integer
-      title:
-        example: Algorithm Contest
-        type: string
     type: object
   responses.ActivityDeleteRequest:
     properties:
@@ -205,13 +211,23 @@ definitions:
         example: Invalid request
         type: string
     type: object
+  responses.GroupActivitiesResponse:
+    properties:
+      activities:
+        items:
+          $ref: '#/definitions/activity.Activity'
+        type: array
+      activity_count:
+        example: 5
+        type: integer
+      group_id:
+        example: 1
+        type: integer
+    type: object
   responses.GroupCreateRequest:
     properties:
       description:
         example: A group for studying algorithms
-        type: string
-      end_date:
-        example: "2025-12-31"
         type: string
       group_image:
         example: https://example.com/image.jpg
@@ -243,9 +259,6 @@ definitions:
     properties:
       description:
         example: Updated description
-        type: string
-      end_date:
-        example: "2025-12-31"
         type: string
       group_image:
         example: https://example.com/image.jpg
@@ -339,15 +352,39 @@ paths:
   /activities:
     post:
       consumes:
-      - application/json
-      description: Create a new activity with title, date, and optional image/description
+      - multipart/form-data
+      description: Create a new activity with mandatory image upload, title, date,
+        and at least one group
       parameters:
-      - description: Activity creation data
-        in: body
-        name: activity
+      - description: Activity Title
+        in: formData
+        name: title
         required: true
-        schema:
-          $ref: '#/definitions/responses.ActivityCreateRequest'
+        type: string
+      - description: Activity Description
+        in: formData
+        name: description
+        type: string
+      - description: Activity Date (YYYY-MM-DD)
+        in: formData
+        name: date
+        required: true
+        type: string
+      - description: Comma-separated Group IDs (at least one required)
+        in: formData
+        name: group_ids
+        required: true
+        type: string
+      - description: Creator ID
+        in: formData
+        name: creator_id
+        required: true
+        type: integer
+      - description: Activity Image
+        in: formData
+        name: image
+        required: true
+        type: file
       produces:
       - application/json
       responses:
@@ -359,7 +396,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/responses.ErrorResponse'
-      summary: Create a new activity
+      summary: Create a new activity with image upload and mandatory group selection
       tags:
       - activities
   /activities/{activity_id}/comments:
@@ -559,6 +596,34 @@ paths:
       summary: Get user activity feed
       tags:
       - activities
+  /activities/feed-with-groups:
+    get:
+      consumes:
+      - application/json
+      description: Get activities from all groups the user is a member of, with group
+        names included
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/activity.ActivityWithGroups'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Get user activity feed with group information
+      tags:
+      - activities
   /comments/{comment_id}:
     delete:
       consumes:
@@ -602,7 +667,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new group with name, end date, and optional image/description
+      description: Create a new group with name and optional image/description
       parameters:
       - description: Group creation data
         in: body
@@ -754,9 +819,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/activity.Activity'
-            type: array
+            $ref: '#/definitions/responses.GroupActivitiesResponse'
         "400":
           description: Bad Request
           schema:

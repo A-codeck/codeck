@@ -10,6 +10,7 @@ import (
 	"backend/models/group"
 	"backend/models/responses"
 	"backend/models/user"
+	"backend/utils"
 
 	"github.com/gorilla/mux"
 )
@@ -80,57 +81,86 @@ func (gc *GroupController) GetGroup(w http.ResponseWriter, r *http.Request) {
 
 // CreateGroup godoc
 // @Summary Create a new group
-// @Description Create a new group with name, end date, and optional image/description
+// @Description Create a new group with name, optional image, and optional description
 // @Tags groups
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
-// @Param group body responses.GroupCreateRequest true "Group creation data"
+// @Param name formData string true "Group name"
+// @Param creator_id formData int true "Creator ID"
+// @Param description formData string false "Group description"
+// @Param image formData file false "Group image (optional)"
 // @Success 201 {object} group.Group
 // @Failure 400 {object} responses.ErrorResponse
 // @Router /groups [post]
 func (gc *GroupController) CreateGroup(w http.ResponseWriter, r *http.Request) {
-	var raw map[string]interface{}
-	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
-		log.Printf("Failed to decode request payload: %v", err)
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	// Parse multipart form
+	err := r.ParseMultipartForm(10 << 20) // 10MB max
+	if err != nil {
+		log.Printf("Failed to parse multipart form: %v", err)
+		http.Error(w, "Invalid multipart form data", http.StatusBadRequest)
 		return
 	}
-	creatorID, ok := raw["creator_id"].(float64)
-	if !ok || int(creatorID) == 0 {
-		log.Println("Missing or invalid creator_id in group creation")
-		http.Error(w, "Missing or invalid creator_id", http.StatusBadRequest)
+
+	// Extract form values
+	name := r.FormValue("name")
+	creatorIDStr := r.FormValue("creator_id")
+	description := r.FormValue("description")
+
+	if name == "" || creatorIDStr == "" {
+		log.Println("Missing required fields: name or creator_id")
+		http.Error(w, "Missing required fields: name and creator_id", http.StatusBadRequest)
 		return
 	}
+
+	creatorID, err := strconv.Atoi(creatorIDStr)
+	if err != nil {
+		log.Printf("Invalid creator_id: %v", err)
+		http.Error(w, "Invalid creator_id", http.StatusBadRequest)
+		return
+	}
+
 	// Check if user exists
-	if _, exists := gc.UserModel.GetUserByID(int(creatorID)); !exists {
-		log.Printf("User with id %d does not exist", int(creatorID))
+	if _, exists := gc.UserModel.GetUserByID(creatorID); !exists {
+		log.Printf("User with id %d does not exist", creatorID)
 		http.Error(w, "Creator user does not exist", http.StatusBadRequest)
 		return
 	}
-	if dateStr, ok := raw["end_date"].(string); ok && len(dateStr) == 10 {
-		raw["end_date"] = dateStr + "T00:00:00Z"
-	}
-	fixed, _ := json.Marshal(raw)
-	var group group.Group
-	if err := json.Unmarshal(fixed, &group); err != nil {
-		log.Printf("Failed to decode request payload: %v", err)
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
-	// Set the creator_id explicitly
-	group.CreatorID = int(creatorID)
 
-	if group.Name == "" || group.EndDate.IsZero() {
-		log.Println("Missing required fields in group creation")
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
-		return
+	// Create group object
+	newGroup := group.Group{
+		Name:      name,
+		CreatorID: creatorID,
 	}
 
-	createdGroup := gc.Model.CreateGroup(group)
+	// Handle optional image upload
+	file, header, err := r.FormFile("image")
+	if err == nil {
+		// Image was provided, save it
+		defer file.Close()
+		uploadResult, err := utils.SaveGroupImage(file, header)
+		if err != nil {
+			log.Printf("Failed to save group image: %v", err)
+			http.Error(w, "Failed to save group image: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		newGroup.GroupImage = &uploadResult.URL
+	} else {
+		// No image provided, leave GroupImage as nil
+		log.Printf("No image file provided: %v", err)
+	}
+
+	// Set description if provided
+	if description != "" {
+		newGroup.Description = &description
+	}
+
+	createdGroup := gc.Model.CreateGroup(newGroup)
+
 	// Add the creator as a member of the group
 	if createdGroup.CreatorID != 0 && createdGroup.ID != 0 {
 		gc.Model.AddUserToGroup(createdGroup.ID, createdGroup.CreatorID)
 	}
+
 	log.Printf("Group created with ID: %d", createdGroup.ID)
 
 	w.WriteHeader(http.StatusCreated)
@@ -427,12 +457,30 @@ func (gc *GroupController) GetGroupMembers(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Enhance members with user information
+	var membersWithUsers []responses.GroupMemberWithUser
+	for _, member := range members {
+		user, userExists := gc.UserModel.GetUserByID(member.UserID)
+		if userExists {
+			memberWithUser := responses.GroupMemberWithUser{
+				UserID:    member.UserID,
+				GroupID:   member.GroupID,
+				Nickname:  member.Nickname,
+				UserName:  user.Name,
+				UserEmail: user.Email,
+			}
+			membersWithUsers = append(membersWithUsers, memberWithUser)
+		}
+	}
+
+	response := responses.GroupMembersWithUsersResponse{
+		GroupID:     groupID,
+		Members:     membersWithUsers,
+		MemberCount: len(membersWithUsers),
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"group_id":     groupID,
-		"members":      members,
-		"member_count": len(members),
-	})
+	json.NewEncoder(w).Encode(response)
 }
 
 // CreateInviteLink godoc
@@ -882,5 +930,175 @@ func (gc *GroupController) GetGroupActivities(w http.ResponseWriter, r *http.Req
 		"group_id":       groupID,
 		"activities":     activities,
 		"activity_count": len(activities),
+	})
+}
+
+// AddUserToGroupByEmail godoc
+// @Summary Add user to group by email
+// @Description Add a user to a group using their email address (only group creator can add users)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param request body responses.AddUserByEmailRequest true "Add user by email request"
+// @Success 201 {object} responses.AddUserToGroupResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 403 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Failure 409 {object} responses.ErrorResponse
+// @Router /groups/{id}/members/email [post]
+func (gc *GroupController) AddUserToGroupByEmail(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupIDStr := vars["id"]
+	groupID, err := strconv.Atoi(groupIDStr)
+	if err != nil {
+		http.Error(w, "Invalid group id", http.StatusBadRequest)
+		return
+	}
+
+	group, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	var request struct {
+		Email       string `json:"email"`
+		RequesterID int    `json:"requester_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.Email == "" || request.RequesterID == 0 {
+		log.Println("Missing email or requester_id in add user by email request")
+		http.Error(w, "Missing email or requester_id", http.StatusBadRequest)
+		return
+	}
+
+	// Check if requester is the group creator
+	if request.RequesterID != group.CreatorID {
+		log.Printf("Forbidden: requester_id=%d is not group creator (group.CreatorID=%d)", request.RequesterID, group.CreatorID)
+		http.Error(w, "Forbidden: Only group creator can add users", http.StatusForbidden)
+		return
+	}
+
+	// Find user by email
+	targetUser, exists := gc.UserModel.GetUserByEmail(request.Email)
+	if !exists {
+		log.Printf("User not found with email: %s", request.Email)
+		http.Error(w, "User not found with the provided email", http.StatusNotFound)
+		return
+	}
+
+	// Check if user is already in the group
+	if gc.Model.IsUserInGroup(groupID, targetUser.ID) {
+		log.Printf("User is already a member of group: group_id=%d, user_id=%d", groupID, targetUser.ID)
+		http.Error(w, "User is already a member of this group", http.StatusConflict)
+		return
+	}
+
+	success := gc.Model.AddUserToGroup(groupID, targetUser.ID)
+	if !success {
+		log.Printf("Failed to add user to group: group_id=%d, user_id=%d", groupID, targetUser.ID)
+		http.Error(w, "Failed to add user to group", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	response := map[string]interface{}{
+		"message":  "User added to group successfully",
+		"group_id": groupID,
+		"user_id":  targetUser.ID,
+		"email":    targetUser.Email,
+		"name":     targetUser.Name,
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+// LeaveGroup godoc
+// @Summary Leave a group
+// @Description Leave a group (if owner leaves, the group is deleted and all members are removed)
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param request body responses.LeaveGroupRequest true "Leave group request"
+// @Success 200 {object} responses.SuccessResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
+// @Router /groups/{id}/leave [post]
+func (gc *GroupController) LeaveGroup(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupIDStr := vars["id"]
+	groupID, err := strconv.Atoi(groupIDStr)
+	if err != nil {
+		http.Error(w, "Invalid group id", http.StatusBadRequest)
+		return
+	}
+
+	group, exists := gc.Model.GetGroupByID(groupID)
+	if !exists {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	var request struct {
+		UserID int `json:"user_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.UserID == 0 {
+		log.Println("Missing user_id in leave group request")
+		http.Error(w, "Missing user_id", http.StatusBadRequest)
+		return
+	}
+
+	// Check if user is in the group
+	if !gc.Model.IsUserInGroup(groupID, request.UserID) {
+		log.Printf("User is not a member of group: group_id=%d, user_id=%d", groupID, request.UserID)
+		http.Error(w, "User is not a member of this group", http.StatusNotFound)
+		return
+	}
+
+	// If the user leaving is the group creator, delete the entire group
+	if request.UserID == group.CreatorID {
+		success := gc.Model.DeleteGroup(groupID)
+		if !success {
+			log.Printf("Failed to delete group: group_id=%d", groupID)
+			http.Error(w, "Failed to delete group", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message":       "Group deleted successfully (owner left group)",
+			"group_id":      groupID,
+			"group_deleted": true,
+		})
+		return
+	}
+
+	// Otherwise, just remove the user from the group
+	success := gc.Model.RemoveUserFromGroup(groupID, request.UserID)
+	if !success {
+		log.Printf("Failed to remove user from group: group_id=%d, user_id=%d", groupID, request.UserID)
+		http.Error(w, "Failed to leave group", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":       "Left group successfully",
+		"group_id":      groupID,
+		"user_id":       request.UserID,
+		"group_deleted": false,
 	})
 }

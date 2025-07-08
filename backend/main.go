@@ -16,10 +16,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"backend/controllers"
+	"backend/utils"
 
 	"backend/models/activity"
 	"backend/models/comment"
@@ -37,19 +40,45 @@ import (
 	"gorm.io/gorm"
 )
 
+// getEnv gets an environment variable or returns a default value
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
 func main() {
+	// Initialize upload directory
+	if err := utils.InitUploadDirs(); err != nil {
+		log.Fatalf("Failed to initialize upload directory: %v", err)
+	}
+
 	r := mux.NewRouter()
+
+	// Add static file serving for uploaded images
+	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads/"))))
 
 	// Add Swagger endpoint
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 	// Migrate db
 	log.Println("Trying to migrate")
-	dsn := "host=db user=my_usr password=my_pwd dbname=codeck port=5432 sslmode=disable"
+
+	// Get database configuration from environment variables with defaults
+	dbHost := getEnv("DB_HOST", "db")
+	dbPort := getEnv("DB_PORT", "5432")
+	dbUser := getEnv("DB_USER", "my_usr")
+	dbPassword := getEnv("DB_PASSWORD", "my_pwd")
+	dbName := getEnv("DB_NAME", "codeck")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		dbHost, dbUser, dbPassword, dbName, dbPort)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
-	if err := db.AutoMigrate(&group.Group{}, &group.GroupMember{}, &group.GroupInvite{}, &activity.Activity{}, &comment.Comment{}, &user.User{}); err != nil {
+	if err := db.AutoMigrate(&group.Group{}, &group.GroupMember{}, &group.GroupInvite{}, &activity.Activity{}, &activity.ActivityGroup{}, &comment.Comment{}, &user.User{}); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 	log.Println("Migration successful")
@@ -63,7 +92,7 @@ func main() {
 	activityController := controllers.NewActivityController(activity.DefaultActivityModel, group.DefaultGroupModel)
 	userController := controllers.NewUserController(user.DefaultUserModel, activity.DefaultActivityModel, group.DefaultGroupModel)
 	loginController := controllers.NewLoginController(user.DefaultUserModel)
-	commentController := controllers.NewCommentController(comment.DefaultCommentModel, activity.DefaultActivityModel, group.DefaultGroupModel)
+	commentController := controllers.NewCommentController(comment.DefaultCommentModel, activity.DefaultActivityModel, group.DefaultGroupModel, user.DefaultUserModel)
 
 	routes.RegisterGroupRoutes(r, groupController)
 	routes.RegisterActivityRoutes(r, activityController)

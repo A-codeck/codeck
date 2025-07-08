@@ -1,46 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import {
   Box,
   Paper,
   Typography,
-  List,
   ListItem,
   ListItemButton,
   ListItemText,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Avatar,
+  Divider,
+  Chip,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
-import { Add as AddIcon, Group as GroupIcon } from '@mui/icons-material';
-import { Group, GroupCreateRequest } from '../types/api';
+import { 
+  Add as AddIcon, 
+  Home as HomeIcon,
+  Settings as SettingsIcon,
+} from '@mui/icons-material';
+import { Group, GroupCreateRequest, UserStats } from '../types/api';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
+import CreateGroupDialog from './CreateGroupDialog';
+import GroupManagementDialog from './GroupManagementDialog';
 
 interface GroupsSidebarProps {
   selectedGroupId?: string;
   onGroupSelect: (groupId: string | undefined) => void;
   onGroupsChange: () => void;
+  onGroupsLoaded?: (groups: Group[]) => void; // New callback to pass groups data
 }
 
-const GroupsSidebar: React.FC<GroupsSidebarProps> = ({
+export interface GroupsSidebarRef {
+  openCreateDialog: () => void;
+}
+
+const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
   selectedGroupId,
   onGroupSelect,
   onGroupsChange,
-}) => {
+  onGroupsLoaded,
+}, ref) => {
   const { user } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newGroupData, setNewGroupData] = useState<GroupCreateRequest>({
-    name: '',
-    description: '',
-    end_date: '',
-    creator_id: '',
-  });
+  const [managementDialogOpen, setManagementDialogOpen] = useState(false);
+  const [selectedGroupForManagement, setSelectedGroupForManagement] = useState<Group | null>(null);
+
+  // Expose functions to parent component
+  useImperativeHandle(ref, () => ({
+    openCreateDialog: () => {
+      setCreateDialogOpen(true);
+    },
+  }));
 
   // Load user's groups using the new API endpoint
   useEffect(() => {
@@ -55,43 +68,50 @@ const GroupsSidebar: React.FC<GroupsSidebarProps> = ({
       setLoading(true);
       const userGroups = await apiService.getUserGroups(user.id);
       setGroups(userGroups);
+
+      // Call the callback to pass groups data to parent
+      if (onGroupsLoaded) {
+        onGroupsLoaded(userGroups);
+      }
     } catch (error) {
       console.error('Error loading groups:', error);
+      // Even if there's an error, we should call the callback with empty array
+      if (onGroupsLoaded) {
+        onGroupsLoaded([]);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateGroup = async () => {
+  const handleCreateGroup = async (groupData: GroupCreateRequest) => {
     if (!user) return;
 
     try {
-      // Add creator_id before sending the request
-      const groupDataWithCreator = {
-        ...newGroupData,
-        creator_id: user.id,
-      };
+      const newGroup = await apiService.createGroup(groupData);
+      const updatedGroups = [...groups, newGroup];
+      setGroups(updatedGroups);
       
-      const newGroup = await apiService.createGroup(groupDataWithCreator);
-      setGroups([...groups, newGroup]);
-      setCreateDialogOpen(false);
-      setNewGroupData({
-        name: '',
-        description: '',
-        end_date: '',
-        creator_id: '',
-      });
+      // Call the callback to pass updated groups data to parent
+      if (onGroupsLoaded) {
+        onGroupsLoaded(updatedGroups);
+      }
       onGroupsChange();
     } catch (error) {
       console.error('Error creating group:', error);
+      throw error; // Re-throw to let the dialog handle it
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewGroupData({
-      ...newGroupData,
-      [e.target.name]: e.target.value,
-    });
+  const handleManageGroup = (group: Group, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setSelectedGroupForManagement(group);
+    setManagementDialogOpen(true);
+  };
+
+  const handleGroupManagementUpdate = () => {
+    loadGroups();
+    onGroupsChange();
   };
 
   return (
@@ -106,129 +126,141 @@ const GroupsSidebar: React.FC<GroupsSidebarProps> = ({
         borderRadius: 0,
       }}
     >
-      <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h3" gutterBottom>
-          Groups
+      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        {/* Home Section */}
+        <ListItem disablePadding sx={{ mb: 1 }}>
+          <ListItemButton
+            selected={!selectedGroupId}
+            onClick={() => onGroupSelect(undefined)}
+            sx={{ borderRadius: 1 }}
+          >
+            <Avatar sx={{ mr: 2, width: 32, height: 32, bgcolor: 'primary.main' }}>
+              <HomeIcon />
+            </Avatar>
+            <ListItemText 
+              primary="Início" 
+              secondary="Ver todas as atividades"
+              primaryTypographyProps={{
+                variant: 'body2',
+                fontWeight: 'medium',
+              }}
+              secondaryTypographyProps={{
+                variant: 'caption',
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Groups Section */}
+        <Typography variant="caption" color="text.secondary" sx={{ px: 1, mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 1 }}>
+          Grupos
         </Typography>
+
+        {groups.map((group, groupIndex) => (
+          <Box key={group.id}>
+            <ListItem disablePadding sx={{ mb: 1 }}>
+              <ListItemButton
+                selected={selectedGroupId === group.id}
+                onClick={() => onGroupSelect(group.id)}
+                sx={{ borderRadius: 1, flexDirection: 'column', alignItems: 'flex-start', py: 1.5 }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1 }}>
+                  <Avatar 
+                    sx={{ mr: 2, width: 32, height: 32 }}
+                    src={group.group_image ? (group.group_image.startsWith('http') ? group.group_image : `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}${group.group_image}`) : undefined}
+                    alt={group.name}
+                  >
+                    {!group.group_image ? group.name.charAt(0).toUpperCase() : null}
+                  </Avatar>
+                  <Box sx={{ 
+                    flex: 1, 
+                    minWidth: 0,
+                    pr: user && group.creator_id === user.id ? '40px' : 0 
+                  }}>
+                    <Typography variant="body2" fontWeight="medium" noWrap>
+                      {group.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                        {group.description?.length > 23
+                        ? group.description.slice(0, 23) + '…'
+                        : group.description}
+                    </Typography>
+                  </Box>
+                  {/* Show manage button for group owners */}
+                  {user && group.creator_id === user.id && (
+                    <Tooltip title="Gerenciar Grupo">
+                      <IconButton
+                        size="small"
+                        onClick={(event) => handleManageGroup(group, event)}
+                        sx={{ 
+                          ml: 1,
+                          position: 'absolute',
+                          right: 8,
+                        }}
+                      >
+                        <SettingsIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
+              </ListItemButton>
+            </ListItem>
+            {groupIndex < groups.length - 1 && <Divider sx={{ my: 1 }} />}
+          </Box>
+        ))}
+
+        {groups.length === 0 && !loading && (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Nenhum grupo ainda
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Crie seu primeiro grupo para começar
+            </Typography>
+          </Box>
+        )}
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Add Group Button */}
         <Button
-          variant="contained"
+          variant="outlined"
           color="secondary"
           startIcon={<AddIcon />}
           fullWidth
           onClick={() => setCreateDialogOpen(true)}
+          sx={{ borderRadius: 1 }}
         >
-          New Group
+          Adicionar Grupo
         </Button>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <List>
-          <ListItem disablePadding>
-            <ListItemButton
-              selected={!selectedGroupId}
-              onClick={() => onGroupSelect(undefined)}
-            >
-              <ListItemText 
-                primary="All Groups" 
-                secondary="See all activities"
-              />
-            </ListItemButton>
-          </ListItem>
-
-          {groups.map((group) => (
-            <ListItem key={group.id} disablePadding>
-              <ListItemButton
-                selected={selectedGroupId === group.id}
-                onClick={() => onGroupSelect(group.id)}
-              >
-                <Avatar sx={{ mr: 2, width: 32, height: 32 }}>
-                  <GroupIcon />
-                </Avatar>
-                <ListItemText
-                  primary={group.name}
-                  secondary={group.description}
-                  primaryTypographyProps={{
-                    variant: 'body2',
-                    noWrap: true,
-                  }}
-                  secondaryTypographyProps={{
-                    variant: 'caption',
-                    noWrap: true,
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-
-          {groups.length === 0 && !loading && (
-            <ListItem>
-              <ListItemText
-                primary="No groups yet"
-                secondary="Create your first group to get started"
-                sx={{ textAlign: 'center' }}
-              />
-            </ListItem>
-          )}
-        </List>
-      </Box>
-
       {/* Create Group Dialog */}
-      <Dialog
+      <CreateGroupDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Create New Group</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            name="name"
-            label="Group Name"
-            value={newGroupData.name}
-            onChange={handleInputChange}
-            required
-            sx={{ mb: 2, mt: 1 }}
-          />
-          <TextField
-            fullWidth
-            name="description"
-            label="Description"
-            value={newGroupData.description}
-            onChange={handleInputChange}
-            multiline
-            rows={3}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            name="end_date"
-            label="End Date"
-            type="date"
-            value={newGroupData.end_date}
-            onChange={handleInputChange}
-            required
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleCreateGroup}
-            variant="contained"
-            color="secondary"
-            disabled={!newGroupData.name || !newGroupData.end_date}
-          >
-            Create Group
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onCreateGroup={handleCreateGroup}
+        creatorId={user?.id || ''}
+      />
+
+      {/* Group Management Dialog */}
+      {selectedGroupForManagement && (
+        <GroupManagementDialog
+          open={managementDialogOpen}
+          onClose={() => {
+            setManagementDialogOpen(false);
+            setSelectedGroupForManagement(null);
+          }}
+          group={selectedGroupForManagement}
+          onGroupUpdated={handleGroupManagementUpdate}
+        />
+      )}
     </Paper>
   );
-};
+});
+
+GroupsSidebar.displayName = 'GroupsSidebar';
 
 export default GroupsSidebar;

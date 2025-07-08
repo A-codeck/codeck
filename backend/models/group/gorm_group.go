@@ -128,6 +128,12 @@ func (m *GormGroupModel) GetActiveInvites(groupID int) []GroupInvite {
 	return invites
 }
 
+func (m *GormGroupModel) GetAllInvites(groupID int) []GroupInvite {
+	var invites []GroupInvite
+	m.db.Where("group_id = ?", groupID).Find(&invites)
+	return invites
+}
+
 func (m *GormGroupModel) GetGroupActivities(groupID int) ([]string, bool) {
 	// This would require a join table or relation in a real schema
 	return []string{}, true // Placeholder
@@ -152,8 +158,6 @@ func (m *GormGroupModel) SeedDefaultData() {
 	m.CreateGroup(Group{
 		CreatorID:   1,
 		Name:        "New Group",
-		StartDate:   time.Now(),
-		EndDate:     time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		Description: stringPtr("A test group"),
 	})
 

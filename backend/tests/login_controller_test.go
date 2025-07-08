@@ -9,7 +9,7 @@ import (
 )
 
 func TestLoginSuccess(t *testing.T) {
-	setupUserTest()
+	setupUserTest(t)
 	loginRequest := map[string]interface{}{
 		"email":    "user@example.com",
 		"password": "password123",
@@ -51,7 +51,7 @@ func TestLoginSuccess(t *testing.T) {
 }
 
 func TestLoginInvalidCredentials(t *testing.T) {
-	setupUserTest()
+	setupUserTest(t)
 	loginRequest := map[string]interface{}{
 		"email":    "user@example.com",
 		"password": "wrongpassword",
@@ -73,7 +73,7 @@ func TestLoginInvalidCredentials(t *testing.T) {
 }
 
 func TestLoginMissingFields(t *testing.T) {
-	setupUserTest()
+	setupUserTest(t)
 	loginRequest := map[string]interface{}{
 		"email": "user@example.com",
 		// Missing password

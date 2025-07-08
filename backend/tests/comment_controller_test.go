@@ -11,14 +11,13 @@ import (
 	"backend/models/comment"
 )
 
-func setupCommentTest() {
-	setupActivityTest()
-	testCommentModel.Clear()
-	testCommentModel.SeedDefaultData()
+func setupCommentTest(t *testing.T) {
+	// Use comprehensive seeding that includes all dependencies
+	SeedAllTestData(t)
 }
 
 func TestGetCommentsByActivityValid(t *testing.T) {
-	setupCommentTest()
+	setupCommentTest(t)
 	req, err := http.NewRequest("GET", "/activities/1/comments", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -46,7 +45,7 @@ func TestGetCommentsByActivityValid(t *testing.T) {
 }
 
 func TestGetCommentsByActivityNotFound(t *testing.T) {
-	setupCommentTest()
+	setupCommentTest(t)
 	req, err := http.NewRequest("GET", "/activities/999/comments", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -61,7 +60,7 @@ func TestGetCommentsByActivityNotFound(t *testing.T) {
 }
 
 func TestCreateCommentValid(t *testing.T) {
-	setupCommentTest()
+	setupCommentTest(t)
 	validComment := map[string]interface{}{
 		"user_id": 2,
 		"content": "This is a test comment!",
@@ -96,7 +95,7 @@ func TestCreateCommentValid(t *testing.T) {
 }
 
 func TestCreateCommentInvalidPayload(t *testing.T) {
-	setupCommentTest()
+	setupCommentTest(t)
 	invalidComment := map[string]interface{}{
 		"user_id": "2",
 		// Missing content
@@ -118,7 +117,7 @@ func TestCreateCommentInvalidPayload(t *testing.T) {
 }
 
 func TestCreateCommentActivityNotFound(t *testing.T) {
-	setupCommentTest()
+	setupCommentTest(t)
 	validComment := map[string]interface{}{
 		"user_id": 2,
 		"content": "This is a test comment!",
@@ -140,7 +139,7 @@ func TestCreateCommentActivityNotFound(t *testing.T) {
 }
 
 func TestDeleteCommentByAuthor(t *testing.T) {
-	setupCommentTest()
+	setupCommentTest(t)
 
 	// First create a comment
 	newComment := testCommentModel.CreateComment(comment.Comment{
@@ -175,7 +174,7 @@ func TestDeleteCommentByAuthor(t *testing.T) {
 }
 
 func TestDeleteCommentByActivityCreator(t *testing.T) {
-	setupCommentTest()
+	setupCommentTest(t)
 
 	// Create a comment from user 2 on activity 1 (created by user 1)
 	newComment := testCommentModel.CreateComment(comment.Comment{
@@ -210,7 +209,7 @@ func TestDeleteCommentByActivityCreator(t *testing.T) {
 }
 
 func TestDeleteCommentForbidden(t *testing.T) {
-	setupCommentTest()
+	setupCommentTest(t)
 
 	// Create a comment from user 2 on activity 1 (created by user 1)
 	newComment := testCommentModel.CreateComment(comment.Comment{
@@ -245,7 +244,7 @@ func TestDeleteCommentForbidden(t *testing.T) {
 }
 
 func TestDeleteCommentNotFound(t *testing.T) {
-	setupCommentTest()
+	setupCommentTest(t)
 
 	deleteRequest := map[string]interface{}{
 		"requester_id": 1,
