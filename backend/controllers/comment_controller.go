@@ -10,6 +10,7 @@ import (
 	"backend/models/comment"
 	"backend/models/group"
 	"backend/models/responses"
+	"backend/models/user"
 
 	"github.com/gorilla/mux"
 )
@@ -18,6 +19,7 @@ type CommentController struct {
 	CommentModel  comment.CommentModel
 	ActivityModel activity.ActivityModel
 	GroupModel    group.GroupModel
+	UserModel     user.UserModel
 }
 
 // swagger imports (used in annotations)
@@ -25,22 +27,23 @@ var (
 	_ = responses.ErrorResponse{}
 )
 
-func NewCommentController(commentModel comment.CommentModel, activityModel activity.ActivityModel, groupModel group.GroupModel) *CommentController {
+func NewCommentController(commentModel comment.CommentModel, activityModel activity.ActivityModel, groupModel group.GroupModel, userModel user.UserModel) *CommentController {
 	return &CommentController{
 		CommentModel:  commentModel,
 		ActivityModel: activityModel,
 		GroupModel:    groupModel,
+		UserModel:     userModel,
 	}
 }
 
 // GetCommentsByActivity godoc
 // @Summary Get comments by activity ID
-// @Description Get all comments for a specific activity
+// @Description Get all comments for a specific activity with user information
 // @Tags comments
 // @Accept json
 // @Produce json
 // @Param activity_id path string true "Activity ID"
-// @Success 200 {object} responses.CommentsResponse
+// @Success 200 {object} responses.CommentsWithUsersResponse
 // @Failure 404 {object} responses.ErrorResponse
 // @Router /activities/{activity_id}/comments [get]
 func (cc *CommentController) GetCommentsByActivity(w http.ResponseWriter, r *http.Request) {
@@ -62,11 +65,33 @@ func (cc *CommentController) GetCommentsByActivity(w http.ResponseWriter, r *htt
 
 	comments := cc.CommentModel.GetCommentsByActivityID(activityID)
 
+	// Enhance comments with user information
+	var commentsWithUsers []responses.CommentWithUser
+	for _, comment := range comments {
+		user, userExists := cc.UserModel.GetUserByID(comment.UserID)
+		commentWithUser := responses.CommentWithUser{
+			ID:         comment.ID,
+			Content:    comment.Content,
+			UserID:     comment.UserID,
+			ActivityID: comment.ActivityID,
+			CreatedAt:  comment.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			UserName:   "Unknown User",
+			UserEmail:  "",
+		}
+
+		if userExists {
+			commentWithUser.UserName = user.Name
+			commentWithUser.UserEmail = user.Email
+		}
+
+		commentsWithUsers = append(commentsWithUsers, commentWithUser)
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"activity_id":   activityID,
-		"comments":      comments,
-		"comment_count": len(comments),
+	json.NewEncoder(w).Encode(responses.CommentsWithUsersResponse{
+		ActivityID:   activityID,
+		Comments:     commentsWithUsers,
+		CommentCount: len(commentsWithUsers),
 	})
 }
 
