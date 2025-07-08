@@ -58,4 +58,9 @@ func (m *GormUserModel) SeedDefaultData() {
 		Name:     "Test User 2",
 		Password: "password123",
 	})
+	m.CreateUser(User{
+		Email:    "user3@example.com",
+		Name:     "Test User 3",
+		Password: "password123",
+	})
 }
