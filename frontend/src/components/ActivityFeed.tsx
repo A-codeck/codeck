@@ -50,8 +50,22 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
         activitiesData = feedActivities;
       }
 
-      // Sort by date (newest first)
-      activitiesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      // Sort by created_at timestamp (newest first)
+      activitiesData.sort((a, b) => {
+        // Primary sort: by created_at timestamp if available
+        if (a.created_at && b.created_at) {
+          const createdAtA = new Date(a.created_at).getTime();
+          const createdAtB = new Date(b.created_at).getTime();
+          if (createdAtA !== createdAtB) {
+            return createdAtB - createdAtA;
+          }
+        }
+        
+        // Fallback sort: by date if created_at is not available or equal
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA;
+      });
       
       setActivities(activitiesData);
       setError(''); // Clear error on successful load
