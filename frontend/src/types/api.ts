@@ -42,6 +42,14 @@ export interface GroupMember {
   nickname?: string;
 }
 
+export interface GroupMemberWithUser {
+  user_id: string;
+  group_id: string;
+  nickname?: string;
+  user_name: string;
+  user_email: string;
+}
+
 export interface GroupInvite {
   invite_code: string;
   group_id: string;
@@ -100,6 +108,19 @@ export interface CommentCreateRequest {
   user_id: string;
 }
 
+export interface AddUserByEmailRequest {
+  email: string;
+  requester_id: string;
+}
+
+export interface LeaveGroupRequest {
+  user_id: string;
+}
+
+export interface JoinGroupByInviteRequest {
+  invite_code: string;
+}
+
 // Response types
 export interface ErrorResponse {
   error: string;
@@ -121,7 +142,7 @@ export interface CommentsWithUsersResponse {
 export interface GroupMembersResponse {
   group_id: string;
   member_count: number;
-  members: GroupMember[];
+  members: GroupMemberWithUser[];
 }
 
 // Extended types for frontend

@@ -50,9 +50,18 @@ type AddUserToGroupRequest struct {
 	UserID int `json:"user_id" example:"1"`
 }
 
+type AddUserByEmailRequest struct {
+	Email       string `json:"email" example:"user@example.com"`
+	RequesterID int    `json:"requester_id" example:"1"`
+}
+
 type RemoveUserFromGroupRequest struct {
 	UserID      int `json:"user_id" example:"1"`
 	RequesterID int `json:"requester_id" example:"2"`
+}
+
+type LeaveGroupRequest struct {
+	UserID int `json:"user_id" example:"1"`
 }
 
 type AddUserToGroupResponse struct {
@@ -65,6 +74,20 @@ type GroupMembersResponse struct {
 	GroupID     int                 `json:"group_id" example:"1"`
 	Members     []group.GroupMember `json:"members"`
 	MemberCount int                 `json:"member_count" example:"3"`
+}
+
+type GroupMemberWithUser struct {
+	UserID    int     `json:"user_id" example:"1"`
+	GroupID   int     `json:"group_id" example:"1"`
+	Nickname  *string `json:"nickname,omitempty" example:"Cool Coder"`
+	UserName  string  `json:"user_name" example:"John Doe"`
+	UserEmail string  `json:"user_email" example:"john@example.com"`
+}
+
+type GroupMembersWithUsersResponse struct {
+	GroupID     int                   `json:"group_id" example:"1"`
+	Members     []GroupMemberWithUser `json:"members"`
+	MemberCount int                   `json:"member_count" example:"3"`
 }
 
 type GroupActivitiesResponse struct {
