@@ -50,12 +50,24 @@ const GroupRanking: React.FC<GroupRankingProps> = ({ groupId }) => {
         try {
           const memberActivities = await apiService.getUserActivities(member.user_id);
           const memberInfo = await apiService.getUser(member.user_id);
-          
+
+          var activity_count = 0
+          var actGroupId = '';
+          for (const activity of memberActivities) {
+            if (!activity || !activity.group_ids) continue;
+            for(actGroupId of activity.group_ids) {
+              if (actGroupId === groupId) {
+                activity_count++;
+                break;
+              }
+            }
+          }
           userStats.push({
             user_id: member.user_id,
             user_name: member.nickname || memberInfo.name,
-            activity_count: memberActivities.length,
+            activity_count: activity_count,
           });
+          
         } catch (error) {
           console.error(`Error loading data for user ${member.user_id}:`, error);
         }
