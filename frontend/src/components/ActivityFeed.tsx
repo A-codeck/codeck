@@ -24,18 +24,19 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     loadActivities();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedGroupId, user]);
+  }, [selectedGroupId, user, refreshTrigger]);
 
   const loadActivities = async () => {
     if (!user) return;
 
     try {
       setLoading(true);
-      setError('');
+      setError(''); // Clear any previous errors
       
       let activitiesData: (ActivityWithGroup | ActivityWithGroups)[] = [];
 
@@ -53,16 +54,35 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
       activitiesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
       setActivities(activitiesData);
+      setError(''); // Clear error on successful load
     } catch (err: any) {
       console.error('Error loading activities:', err);
-      setError('Failed to load activities');
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to load activities';
+      if (err.response?.status === 403) {
+        errorMessage = 'You do not have permission to view this group\'s activities';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Group not found or you are not a member';
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      }
+      
+      setError(errorMessage);
+      setActivities([]); // Clear activities on error
     } finally {
       setLoading(false);
     }
   };
 
   const handleActivityAdded = () => {
-    loadActivities();
+    // Trigger a refresh by updating the refresh trigger
+    setRefreshTrigger(prev => {
+      console.log('ActivityFeed: refreshTrigger updated from', prev, 'to', prev + 1);
+      return prev + 1;
+    });
   };
 
   const getFeedTitle = () => {
@@ -171,6 +191,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
         open={addDialogOpen}
         onClose={() => setAddDialogOpen(false)}
         onActivityAdded={handleActivityAdded}
+        preselectedGroupId={selectedGroupId}
       />
     </Box>
   );

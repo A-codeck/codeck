@@ -14,6 +14,7 @@ import type {
   CommentsResponse,
   CommentsWithUsersResponse,
   GroupMembersResponse,
+  GroupActivitiesResponse,
   GroupInvite,
 } from '../types/api';
 
@@ -149,8 +150,8 @@ class ApiService {
   }
 
   async getGroupActivities(groupId: string, requesterId: string): Promise<Activity[]> {
-    const response = await this.api.get<Activity[]>(`/groups/${groupId}/activities?requester_id=${requesterId}`);
-    return response.data;
+    const response = await this.api.get<GroupActivitiesResponse>(`/groups/${groupId}/activities?requester_id=${requesterId}`);
+    return response.data.activities;
   }
 
   async getGroupMembers(groupId: string, requesterId: string): Promise<GroupMembersResponse> {

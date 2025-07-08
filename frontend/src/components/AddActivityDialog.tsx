@@ -25,12 +25,14 @@ interface AddActivityDialogProps {
   open: boolean;
   onClose: () => void;
   onActivityAdded: () => void;
+  preselectedGroupId?: string;
 }
 
 const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
   open,
   onClose,
   onActivityAdded,
+  preselectedGroupId,
 }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState<Omit<ActivityCreateRequest, 'image'>>({
@@ -50,12 +52,14 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
       // Update creator_id when user changes or dialog opens
       setFormData(prevData => ({
         ...prevData,
-        creator_id: user.id
+        creator_id: user.id,
+        // Preselect group if provided
+        group_ids: preselectedGroupId ? [preselectedGroupId] : []
       }));
       loadUserGroups();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, user]);
+  }, [open, user, preselectedGroupId]);
 
   const loadUserGroups = async () => {
     if (!user) return;
@@ -130,7 +134,13 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
         image: selectedImage,
       };
       
-      await apiService.createActivity(activityData);
+      console.log('Creating activity with data:', {
+        ...activityData,
+        image: selectedImage.name // Don't log the full file object
+      });
+      
+      const result = await apiService.createActivity(activityData);
+      console.log('Activity created successfully:', result);
       
       // Reset form
       setFormData({
@@ -143,10 +153,13 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
       setSelectedImage(null);
       setImagePreview(null);
       
+      console.log('Calling onActivityAdded callback');
       onActivityAdded();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating activity:', error);
+      console.error('Error details:', error.response?.data);
+      alert('Failed to create activity. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -180,9 +193,7 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
             day: 'numeric' 
           })}
         </Typography>
-      </DialogTitle>
-      
-      <DialogContent>
+      </DialogTitle>        <DialogContent>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
           <TextField
             fullWidth
@@ -283,6 +294,10 @@ const AddActivityDialog: React.FC<AddActivityDialogProps> = ({
             ) : formData.group_ids.length === 0 ? (
               <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
                 Please select at least one group
+              </Typography>
+            ) : preselectedGroupId && formData.group_ids.includes(preselectedGroupId) ? (
+              <Typography variant="caption" color="primary" sx={{ mt: 0.5, ml: 1.5 }}>
+                Current group is preselected. You can select additional groups if desired.
               </Typography>
             ) : null}
           </FormControl>

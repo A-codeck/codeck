@@ -9,6 +9,7 @@ import {
   Button,
   Avatar,
   Divider,
+  Chip,
   IconButton,
   Tooltip,
 } from '@mui/material';
@@ -67,7 +68,7 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
       setLoading(true);
       const userGroups = await apiService.getUserGroups(user.id);
       setGroups(userGroups);
-      
+
       // Call the callback to pass groups data to parent
       if (onGroupsLoaded) {
         onGroupsLoaded(userGroups);
@@ -100,6 +101,17 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
       console.error('Error creating group:', error);
       throw error; // Re-throw to let the dialog handle it
     }
+  };
+
+  const handleManageGroup = (group: Group, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setSelectedGroupForManagement(group);
+    setManagementDialogOpen(true);
+  };
+
+  const handleGroupManagementUpdate = () => {
+    loadGroups();
+    onGroupsChange();
   };
 
   return (
@@ -162,23 +174,11 @@ const GroupsSidebar = forwardRef<GroupsSidebarRef, GroupsSidebarProps>(({
                   >
                     {!group.group_image ? group.name.charAt(0).toUpperCase() : null}
                   </Avatar>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Box sx={{ flex: 1 }}>
                     <Typography variant="body2" fontWeight="medium" noWrap>
                       {group.name}
                     </Typography>
-                    <Typography 
-                      variant="caption" 
-                      color="text.secondary" 
-                      sx={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        lineHeight: 1.2,
-                        maxHeight: '2.4em'
-                      }}
-                    >
+                    <Typography variant="caption" color="text.secondary" noWrap>
                       {group.description}
                     </Typography>
                   </Box>
