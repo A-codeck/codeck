@@ -1,65 +1,74 @@
 # CODECK
-###### COmpetição DE Código do Kim 
-GymRats para maratoners. Codar é legal, mas codar melhor que seus amigos é mais.
 
-## 🚀 Features Implemented
+###### COmpetição DE Código do Kim
 
-### ✅ Group-Based Activity Feed System
-- **User Groups**: Users can create and join multiple groups
-- **Activity Feeds**: See activities from all groups you belong to
-- **Group Activities**: View activities specific to individual groups
-- **Smart Filtering**: Activities are filtered based on group membership
+GymRats para maratonistas. Programar é legal, mas programar melhor que seus amigos é mais ainda.
 
-### ✅ Complete API Endpoints
-- `GET /users/{id}/groups` - Get user's groups
-- `GET /activities/feed?user_id={user_id}` - Get user's activity feed
-- `POST /groups` - Create groups with automatic creator membership
-- `POST /activities` - Create activities linked to groups
+## 🚀 Funcionalidades Implementadas
 
-### ✅ Modern Frontend Integration
-- **React + TypeScript** frontend with Material-UI components
-- **Groups Sidebar** for easy group navigation
-- **Activity Feed** with "All Groups" and individual group views
-- **Activity Creation** with group selection
-- **Type-safe API** communication between frontend and backend
+### ✅ Sistema de Feed de Atividades por Grupo
 
-## 📖 Getting Started
+* **Grupos de Usuários**: Usuários podem criar e entrar em vários grupos
+* **Feed de Atividades**: Veja as atividades de todos os grupos aos quais você pertence
+* **Atividades por Grupo**: Visualize atividades específicas de grupos individuais
+* **Filtro Inteligente**: As atividades são filtradas com base na associação a grupos
 
-### Prerequisites
-- Go 1.19+
-- Node.js 18+
-- npm or yarn
+### ✅ Endpoints de API Completos
 
-### Installation & Running
+* `GET /users/{id}/groups` - Obtém os grupos de um usuário
+* `GET /activities/feed?user_id={user_id}` - Obtém o feed de atividades de um usuário
+* `POST /groups` - Cria grupos com o criador automaticamente adicionado
+* `POST /activities` - Cria atividades vinculadas a grupos
+
+### ✅ Integração com Frontend Moderno
+
+* Frontend em **React + TypeScript** com componentes do Material-UI
+* **Barra Lateral de Grupos** para navegação fácil entre grupos
+* **Feed de Atividades** com visualizações de "Todos os Grupos" e de grupos individuais
+* **Criação de Atividades** com seleção de grupo
+* Comunicação entre frontend e backend com **API tipada com segurança**
+
+## 📖 Começando
+
+### Pré-requisitos
+
+* Go 1.19 ou superior
+* Node.js 18 ou superior
+* npm ou yarn
+* docker  
+* docker compose 
+
+### Instalação e Execução
 
 ```bash
-# Start backend
+# Iniciar o backend
 cd backend
-go run .
+docker compose up --build
 
-# Start frontend (in another terminal)
+# Iniciar o frontend (em outro terminal)
 cd frontend
 npm install
-npm run dev
+npm start
 ```
 
-Visit `http://localhost:5173` to use the application!
+Acesse `http://localhost:3000` para usar a aplicação!
 
-### Testing
+### Testes
 
-Run the backend tests using Docker for complete isolation:
+Execute os testes do backend usando Docker para isolamento completo:
 
 ```bash
 cd backend
-docker-compose -f docker-compose.test.yml run --rm test_runner
+docker compose -f docker-compose.test.yml run --rm test_runner
 ```
 
-This will automatically:
-- Start a clean test database container
-- Run all tests with isolated test data  
-- Clean up containers when done
+Esse comando irá automaticamente:
 
-See [backend/TESTING.md](backend/TESTING.md) for detailed testing documentation.
+* Iniciar um container limpo com banco de dados de teste
+* Executar todos os testes com dados de teste isolados
+* Remover os containers ao finalizar
+
+Veja [backend/TESTING.md](backend/TESTING.md) para a documentação completa de testes.
 
 # Banco de dados
 Utilizamos PostgreSQL para o banco de dados. 
