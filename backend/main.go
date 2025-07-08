@@ -72,7 +72,7 @@ func main() {
 	activityController := controllers.NewActivityController(activity.DefaultActivityModel, group.DefaultGroupModel)
 	userController := controllers.NewUserController(user.DefaultUserModel, activity.DefaultActivityModel, group.DefaultGroupModel)
 	loginController := controllers.NewLoginController(user.DefaultUserModel)
-	commentController := controllers.NewCommentController(comment.DefaultCommentModel, activity.DefaultActivityModel, group.DefaultGroupModel)
+	commentController := controllers.NewCommentController(comment.DefaultCommentModel, activity.DefaultActivityModel, group.DefaultGroupModel, user.DefaultUserModel)
 
 	routes.RegisterGroupRoutes(r, groupController)
 	routes.RegisterActivityRoutes(r, activityController)
