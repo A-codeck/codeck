@@ -66,6 +66,8 @@ export interface Comment {
   user_id: string;
   activity_id: string;
   created_at: string;
+  user_name?: string;
+  user_email?: string;
 }
 
 // Request types
@@ -125,6 +127,13 @@ export interface ErrorResponse {
 }
 
 export interface CommentsResponse {
+  activity_id: string;
+  comment_count: number;
+  comments: Comment[];
+}
+
+// Enhanced comments response with user information
+export interface CommentsWithUsersResponse {
   activity_id: string;
   comment_count: number;
   comments: Comment[];

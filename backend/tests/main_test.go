@@ -170,7 +170,7 @@ func TestMain(m *testing.M) {
 	testLoginRouter = mux.NewRouter()
 	routes.RegisterLoginRoutes(testLoginRouter, loginController)
 
-	commentController := controllers.NewCommentController(testCommentModel, testActivityModel, testGroupModel)
+	commentController := controllers.NewCommentController(testCommentModel, testActivityModel, testGroupModel, testUserModel)
 	testCommentRouter = mux.NewRouter()
 	routes.RegisterCommentRoutes(testCommentRouter, commentController)
 

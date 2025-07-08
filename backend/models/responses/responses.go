@@ -158,3 +158,20 @@ type CommentDeleteResponse struct {
 	Message   string `json:"message" example:"Comment deleted successfully"`
 	CommentID int    `json:"comment_id" example:"1"`
 }
+
+// Enhanced comment structure with user information
+type CommentWithUser struct {
+	ID         int    `json:"id"`
+	Content    string `json:"content"`
+	UserID     int    `json:"user_id"`
+	ActivityID int    `json:"activity_id"`
+	CreatedAt  string `json:"created_at"`
+	UserName   string `json:"user_name"`
+	UserEmail  string `json:"user_email"`
+}
+
+type CommentsWithUsersResponse struct {
+	ActivityID   int               `json:"activity_id" example:"1"`
+	Comments     []CommentWithUser `json:"comments"`
+	CommentCount int               `json:"comment_count" example:"5"`
+}
