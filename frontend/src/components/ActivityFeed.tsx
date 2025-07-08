@@ -101,16 +101,16 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
 
   const getFeedTitle = () => {
     if (selectedGroupId) {
-      return 'Group Activities';
+      return 'Atividades do Grupo';
     }
-    return 'Activity Feed';
+    return 'Feed de Atividades';
   };
 
   const getFeedSubtitle = () => {
     if (selectedGroupId) {
-      return 'Activities from this group';
+      return 'Atividades deste grupo';
     }
-    return 'Activities from all your groups';
+    return 'Atividades de todos os seus grupos';
   };
 
   if (loading) {
@@ -155,7 +155,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
             onClick={() => setAddDialogOpen(true)}
             size="large"
           >
-            Log Activity
+            Registrar Atividade
           </Button>
         </Box>
       </Paper>
@@ -180,12 +180,12 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
         ) : (
           <Paper sx={{ p: 4, textAlign: 'center' }}>
             <Typography variant="h3" color="text.secondary" gutterBottom>
-              No activities yet
+              Nenhuma atividade ainda
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
               {selectedGroupId 
-                ? 'No activities have been posted in this group yet.'
-                : 'Start by logging your first coding activity!'
+                ? 'Nenhuma atividade foi postada neste grupo ainda.'
+                : 'Comece registrando sua primeira atividade de programação!'
               }
             </Typography>
             <Button
@@ -194,7 +194,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ selectedGroupId }) => {
               startIcon={<AddIcon />}
               onClick={() => setAddDialogOpen(true)}
             >
-              Log Your First Activity
+              Registrar Sua Primeira Atividade
             </Button>
           </Paper>
         )}

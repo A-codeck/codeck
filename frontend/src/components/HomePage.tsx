@@ -67,14 +67,14 @@ const HomePage: React.FC = () => {
       <Paper sx={{ p: 6, textAlign: 'center', maxWidth: 600 }}>
         <GroupIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 3 }} />
         <Typography variant="h3" gutterBottom>
-          Welcome to CODECK!
+          Bem-vindo ao CODECK!
         </Typography>
         <Typography variant="h4" color="text.secondary" gutterBottom>
-          You're not part of any groups yet
+          Você ainda não faz parte de nenhum grupo
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.6 }}>
-          To start sharing your coding activities, you need to either create your first group or join an existing one. 
-          Groups help you connect with other programmers and track your progress together.
+          Para começar a compartilhar suas atividades de programação, você precisa criar seu primeiro grupo ou entrar em um já existente. 
+          Os grupos ajudam você a se conectar com outros programadores e acompanhar seu progresso juntos.
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Button
@@ -86,7 +86,7 @@ const HomePage: React.FC = () => {
               groupsSidebarRef.current?.openCreateDialog();
             }}
           >
-            Create Your First Group
+            Criar Seu Primeiro Grupo
           </Button>
           <Button
             variant="outlined"
@@ -94,11 +94,11 @@ const HomePage: React.FC = () => {
             size="large"
             onClick={() => setJoinGroupDialogOpen(true)}
           >
-            Join a Group
+            Entrar em um Grupo
           </Button>
         </Box>
         <Typography variant="caption" color="text.secondary" sx={{ mt: 3, display: 'block' }}>
-          Once you're part of a group, you'll be able to log activities and see what others are working on!
+          Assim que você fizer parte de um grupo, poderá registrar atividades e ver no que outros estão trabalhando!
         </Typography>
       </Paper>
     </Box>
@@ -112,29 +112,25 @@ const HomePage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
             {/* Logo Placeholder */}
             <Box
+              component="img"
+              src="/logo4x.png"
+              alt="CODECK Logo"
               sx={{
-                width: 40,
-                height: 40,
+                width: 42,
+                height: 50,
                 borderRadius: 2,
-                background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '1.2rem',
+                objectFit: 'cover',
+                mr: -1,
               }}
-            >
-              C
-            </Box>
-            <Typography variant="h2" component="div">
+            />
+            <Typography variant="h2" color="#3DC959" component="div">
               CODECK
             </Typography>
           </Box>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Typography variant="body1">
-          Welcome, {user?.name}
+          Bem-vindo, {user?.name}
         </Typography>
         
         <IconButton
@@ -164,7 +160,7 @@ const HomePage: React.FC = () => {
             }}
           >
             <MenuItem onClick={handleLogout}>
-              Logout
+              Sair
             </MenuItem>
           </Menu>
         </Toolbar>

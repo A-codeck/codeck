@@ -114,12 +114,12 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
       maxWidth="sm"
       fullWidth
     >
-      <DialogTitle>Create New Group</DialogTitle>
+      <DialogTitle>Criar Novo Grupo</DialogTitle>
       <DialogContent>
         <TextField
           fullWidth
           name="name"
-          label="Group Name"
+          label="Nome do Grupo"
           value={newGroupData.name}
           onChange={handleInputChange}
           required
@@ -128,7 +128,7 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
         <TextField
           fullWidth
           name="description"
-          label="Description"
+          label="Descrição"
           value={newGroupData.description}
           onChange={handleInputChange}
           multiline
@@ -142,7 +142,7 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
             fullWidth
             sx={{ mb: 1 }}
           >
-            {selectedImage ? 'Change Group Image' : 'Upload Group Image (Optional)'}
+            {selectedImage ? 'Alterar Imagem do Grupo' : 'Fazer Upload da Imagem do Grupo (Opcional)'}
             <input
               type="file"
               hidden
@@ -152,7 +152,7 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
           </Button>
           {selectedImage && (
             <Typography variant="body2" color="text.secondary">
-              Selected: {selectedImage.name}
+              Selecionado: {selectedImage.name}
             </Typography>
           )}
           {imagePreview && (
@@ -172,7 +172,7 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={isCreating}>
-          Cancel
+          Cancelar
         </Button>
         <Button
           onClick={handleCreateGroup}
@@ -180,7 +180,7 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
           color="secondary"
           disabled={!newGroupData.name.trim() || isCreating}
         >
-          {isCreating ? 'Creating...' : 'Create Group'}
+          {isCreating ? 'Criando...' : 'Criar Grupo'}
         </Button>
       </DialogActions>
     </Dialog>
